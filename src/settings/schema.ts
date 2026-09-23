@@ -19,6 +19,7 @@ export interface Settings extends EngineSettings {
 
 export const DEFAULT_SETTINGS: Settings = {
   ...DEFAULT_ENGINE_SETTINGS,
+  excludeHolidays: true,
   autoStart: true,
   theme: "system",
   widget: {

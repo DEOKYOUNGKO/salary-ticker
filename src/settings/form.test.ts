@@ -18,6 +18,7 @@ const valid: SettingsForm = {
   lunchEnabled: true,
   lunchStart: "12:00",
   lunchEnd: "13:00",
+  excludeHolidays: true,
   autoStart: true,
 };
 

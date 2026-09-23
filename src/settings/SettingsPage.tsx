@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { countWorkDays, getPayPeriod, perSecondRate } from "../engine";
+import { countWorkDays, getPayPeriod, HOLIDAY_YEARS, KR_HOLIDAYS, perSecondRate } from "../engine";
 import { formatWon0, formatWon2 } from "../format";
 import {
   formatSalaryInput,
@@ -57,7 +57,7 @@ export default function SettingsPage() {
     const period = getPayPeriod(now, draft.periodStartDay);
     const basis =
       draft.mode === "work"
-        ? `이번 달 근무일 ${countWorkDays(period, draft)}일 기준`
+        ? `이번 달 근무일 ${countWorkDays(period, draft, KR_HOLIDAYS)}일 기준`
         : `이번 달 ${Math.round((period.end.getTime() - period.start.getTime()) / 86_400_000)}일 기준`;
     return { perSecond, hourly: perSecond * 3600, basis };
   }, [form, base, errors]);
@@ -204,6 +204,20 @@ export default function SettingsPage() {
         </div>
         <p className="error" role="alert">
           {showError("lunch") || ""}
+        </p>
+      </div>
+
+      <div className="field">
+        <label className="check">
+          <input
+            type="checkbox"
+            checked={form.excludeHolidays}
+            onChange={(e) => update("excludeHolidays", e.target.checked)}
+          />
+          공휴일은 쉬는 날로 계산
+        </label>
+        <p className="hint">
+          대체공휴일·선거일 포함, {HOLIDAY_YEARS.from}~{HOLIDAY_YEARS.to}년 공휴일 내장
         </p>
       </div>
 

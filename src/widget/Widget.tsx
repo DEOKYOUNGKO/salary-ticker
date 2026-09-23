@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { calculate } from "../engine";
+import { calculate, holidayName } from "../engine";
 import {
   formatDuration,
   formatWon0,
@@ -54,7 +54,8 @@ function WidgetCard({ settings }: { settings: Settings }) {
       <header className="card-header" data-tauri-drag-region>
         <span className="status-pill" data-tauri-drag-region>
           <span className="status-dot" aria-hidden data-tauri-drag-region />
-          {STATUS_LABEL[e.status]}
+          {(e.status === "holiday" && settings.excludeHolidays && holidayName(now)) ||
+            STATUS_LABEL[e.status]}
         </span>
         <span className="header-right" data-tauri-drag-region>
           <span className="clock" data-tauri-drag-region>{clockFormat.format(now)}</span>

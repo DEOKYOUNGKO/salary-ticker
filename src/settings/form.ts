@@ -10,6 +10,7 @@ export interface SettingsForm {
   lunchEnabled: boolean;
   lunchStart: string;
   lunchEnd: string;
+  excludeHolidays: boolean;
   autoStart: boolean;
 }
 
@@ -27,6 +28,7 @@ export function settingsToForm(s: Settings): SettingsForm {
     lunchEnabled: s.lunch !== null,
     lunchStart: s.lunch?.start ?? "12:00",
     lunchEnd: s.lunch?.end ?? "13:00",
+    excludeHolidays: s.excludeHolidays,
     autoStart: s.autoStart,
   };
 }
@@ -40,6 +42,7 @@ export function formToSettings(form: SettingsForm, base: Settings): Settings {
     workStart: form.workStart,
     workEnd: form.workEnd,
     lunch: form.lunchEnabled ? { start: form.lunchStart, end: form.lunchEnd } : null,
+    excludeHolidays: form.excludeHolidays,
     autoStart: form.autoStart,
   };
 }

@@ -1,4 +1,5 @@
 import type { Earnings, EngineSettings, HolidaySet, Status } from "./types";
+import { KR_HOLIDAYS } from "./holidays";
 import { getPayPeriod } from "./period";
 import {
   countWorkDays,
@@ -15,7 +16,7 @@ function secondsToNextWorkStart(
   now: Date,
   segments: readonly Segment[],
   settings: EngineSettings,
-  holidays?: HolidaySet,
+  holidays: HolidaySet,
 ): number | null {
   if (segments.length === 0) return null;
   const workStart = segments[0][0];
@@ -35,7 +36,7 @@ function secondsToNextWorkStart(
 export function getStatus(
   now: Date,
   settings: EngineSettings,
-  holidays?: HolidaySet,
+  holidays: HolidaySet = KR_HOLIDAYS,
 ): { status: Status; nextStatus: Status | null; secondsToNextStatus: number | null } {
   const segments = workSegments(settings);
   const sec = secondsOfDay(now);
@@ -82,7 +83,7 @@ export function getStatus(
 export function perSecondRate(
   now: Date,
   settings: EngineSettings,
-  holidays?: HolidaySet,
+  holidays: HolidaySet = KR_HOLIDAYS,
 ): number {
   const period = getPayPeriod(now, settings.periodStartDay);
   const totalSeconds =
@@ -98,7 +99,7 @@ export function perSecondRate(
 export function calculate(
   now: Date,
   settings: EngineSettings,
-  holidays?: HolidaySet,
+  holidays: HolidaySet = KR_HOLIDAYS,
 ): Earnings {
   const period = getPayPeriod(now, settings.periodStartDay);
   const today = startOfDay(now);
