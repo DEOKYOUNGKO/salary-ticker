@@ -248,17 +248,6 @@ export default function SettingsPage() {
         <p className="hint flush">그 달에 없는 날짜(예: 31일)는 말일부터 시작해요.</p>
       </div>
 
-      <div className="field">
-        <label className="check">
-          <input
-            type="checkbox"
-            checked={form.autoStart}
-            onChange={(e) => update("autoStart", e.target.checked)}
-          />
-          Windows 시작 시 자동 실행
-        </label>
-      </div>
-
       <div className="preview" aria-live="polite">
         {preview ? (
           <>
@@ -275,6 +264,36 @@ export default function SettingsPage() {
         ) : (
           <div className="preview-empty">월급과 시간을 입력하면 초당 금액을 미리 보여 드려요.</div>
         )}
+      </div>
+
+      <h2 className="section">위젯</h2>
+
+      <div className="field">
+        <label htmlFor="opacity">
+          불투명도 <span className="value">{Math.round(form.opacity * 100)}%</span>
+        </label>
+        <input
+          id="opacity"
+          type="range"
+          min={0.2}
+          max={1}
+          step={0.05}
+          value={form.opacity}
+          onChange={(e) => update("opacity", Number(e.target.value))}
+        />
+      </div>
+
+      <h2 className="section">기타</h2>
+
+      <div className="field">
+        <label className="check">
+          <input
+            type="checkbox"
+            checked={form.autoStart}
+            onChange={(e) => update("autoStart", e.target.checked)}
+          />
+          Windows 시작 시 자동 실행
+        </label>
       </div>
 
       {saveError && <p className="error save-error">{saveError}</p>}

@@ -49,7 +49,7 @@ function WidgetCard({ settings }: { settings: Settings }) {
   const progress = Math.round(e.todayProgress * 1000) / 10;
 
   return (
-    <main className={`card status-${e.status}`}>
+    <main className={`card status-${e.status}`} style={{ opacity: settings.widget.opacity }}>
       {/* 상단 줄을 잡고 끌어서 이동. 드래그 속성은 클릭된 요소 자신에 있어야 해서 글자에도 붙임 */}
       <header className="card-header" data-tauri-drag-region>
         <span className="status-pill" data-tauri-drag-region>

@@ -20,6 +20,7 @@ const valid: SettingsForm = {
   lunchEnd: "13:00",
   excludeHolidays: true,
   periodStartDay: 1,
+  opacity: 1,
   autoStart: true,
 };
 
@@ -79,6 +80,11 @@ describe("폼 ↔ 설정 변환", () => {
 
   it("급여 기간 시작일을 그대로 저장", () => {
     expect(formToSettings({ ...valid, periodStartDay: 25 }, DEFAULT_SETTINGS).periodStartDay).toBe(25);
+  });
+
+  it("위젯 불투명도는 widget.opacity에 저장", () => {
+    const s = formToSettings({ ...valid, opacity: 0.6 }, DEFAULT_SETTINGS);
+    expect(s.widget).toEqual({ ...DEFAULT_SETTINGS.widget, opacity: 0.6 });
   });
 
   it("점심 제외를 끄면 lunch=null", () => {

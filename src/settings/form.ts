@@ -13,6 +13,8 @@ export interface SettingsForm {
   excludeHolidays: boolean;
   /** 1~31 */
   periodStartDay: number;
+  /** 위젯 불투명도 0.2~1 */
+  opacity: number;
   autoStart: boolean;
 }
 
@@ -32,6 +34,7 @@ export function settingsToForm(s: Settings): SettingsForm {
     lunchEnd: s.lunch?.end ?? "13:00",
     excludeHolidays: s.excludeHolidays,
     periodStartDay: s.periodStartDay,
+    opacity: s.widget.opacity,
     autoStart: s.autoStart,
   };
 }
@@ -48,6 +51,10 @@ export function formToSettings(form: SettingsForm, base: Settings): Settings {
     excludeHolidays: form.excludeHolidays,
     periodStartDay: form.periodStartDay,
     autoStart: form.autoStart,
+    widget: {
+      ...base.widget,
+      opacity: form.opacity,
+    },
   };
 }
 
