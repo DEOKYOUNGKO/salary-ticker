@@ -23,6 +23,7 @@ const valid: SettingsForm = {
   opacity: 1,
   compact: false,
   placement: "top",
+  clickThrough: false,
   autoStart: true,
 };
 

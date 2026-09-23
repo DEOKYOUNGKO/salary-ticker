@@ -17,6 +17,7 @@ export interface SettingsForm {
   opacity: number;
   compact: boolean;
   placement: "top" | "bottom";
+  clickThrough: boolean;
   autoStart: boolean;
 }
 
@@ -39,6 +40,7 @@ export function settingsToForm(s: Settings): SettingsForm {
     opacity: s.widget.opacity,
     compact: s.widget.compact,
     placement: s.widget.placement,
+    clickThrough: s.widget.clickThrough,
     autoStart: s.autoStart,
   };
 }
@@ -60,6 +62,7 @@ export function formToSettings(form: SettingsForm, base: Settings): Settings {
       opacity: form.opacity,
       compact: form.compact,
       placement: form.placement,
+      clickThrough: form.clickThrough,
     },
   };
 }

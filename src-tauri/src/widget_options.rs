@@ -1,4 +1,4 @@
-//! 저장된 settings.widget 값(미니 모드, 바탕화면 고정 등)을 위젯 창에 반영한다.
+//! 저장된 settings.widget 값(미니 모드, 바탕화면 고정, 클릭 통과)을 위젯 창에 반영한다.
 
 use serde_json::Value;
 use tauri::{AppHandle, LogicalSize, Manager, PhysicalPosition, Runtime, WebviewWindow};
@@ -12,6 +12,8 @@ pub struct WidgetOptions {
     pub compact: bool,
     /// placement == "bottom": 항상 위 대신 다른 창들 아래(바탕화면 고정)
     pub on_bottom: bool,
+    /// 마우스 입력을 뒤의 창으로 통과시킴 (위젯은 클릭·드래그 불가, 트레이에서 끔)
+    pub click_through: bool,
 }
 
 pub fn read<R: Runtime>(app: &AppHandle<R>) -> WidgetOptions {
@@ -24,6 +26,7 @@ pub fn read<R: Runtime>(app: &AppHandle<R>) -> WidgetOptions {
     };
     WidgetOptions {
         compact: flag("compact"),
+        click_through: flag("clickThrough"),
         on_bottom: widget
             .as_ref()
             .and_then(|w| w.get("placement").and_then(Value::as_str))
@@ -77,7 +80,7 @@ fn apply_size<R: Runtime>(
 }
 
 /// 저장된 옵션을 위젯 창에 반영. 앱 시작 시에는 저장 위치를 복원하기 전이라 anchor=false.
-pub fn apply<R: Runtime>(window: &WebviewWindow<R>, anchor: bool) -> tauri::Result<()> {
+pub fn apply<R: Runtime>(window: &WebviewWindow<R>, anchor: bool) -> tauri::Result<WidgetOptions> {
     let options = read(window.app_handle());
     // 둘 다 켜지지 않도록 끄는 쪽을 먼저
     if options.on_bottom {
@@ -87,5 +90,7 @@ pub fn apply<R: Runtime>(window: &WebviewWindow<R>, anchor: bool) -> tauri::Resu
         window.set_always_on_bottom(false)?;
         window.set_always_on_top(true)?;
     }
-    apply_size(window, options.compact, anchor)
+    window.set_ignore_cursor_events(options.click_through)?;
+    apply_size(window, options.compact, anchor)?;
+    Ok(options)
 }

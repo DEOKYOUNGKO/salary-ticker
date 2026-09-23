@@ -46,6 +46,30 @@ pub fn toggle_widget(app: &AppHandle) {
     set_widget_visible(app, !visible);
 }
 
+/// 저장된 위젯 옵션을 창과 트레이 메뉴(클릭 통과 체크)에 반영
+fn apply_widget_options(app: &AppHandle, anchor: bool) -> tauri::Result<()> {
+    if let Some(widget) = app.get_webview_window(WIDGET) {
+        let options = widget_options::apply(&widget, anchor)?;
+        tray::set_click_through_checked(app, options.click_through);
+    }
+    Ok(())
+}
+
+/// 트레이 "클릭 통과": 저장값을 뒤집고 바로 반영. 켜져 있으면 위젯을 클릭할 수 없으므로 여기서만 끌 수 있다.
+pub fn toggle_click_through(app: &AppHandle) {
+    if !settings::is_configured(app) {
+        tray::set_click_through_checked(app, false);
+        return;
+    }
+    let enabled = !widget_options::read(app).click_through;
+    if let Some(saved) = settings::set_widget_option(app, "clickThrough", enabled.into()) {
+        let _ = app.emit("settings-changed", saved);
+    }
+    if let Err(e) = apply_widget_options(app, true) {
+        eprintln!("[widget] 클릭 통과 반영 실패: {e}");
+    }
+}
+
 /// 설정 창 열기. 폼은 저장값으로 다시 채운다.
 pub fn show_settings(app: &AppHandle) {
     let _ = app.emit_to(SETTINGS, "settings-opened", ());
@@ -74,9 +98,7 @@ fn hide_settings(app: AppHandle) -> Result<(), String> {
 #[tauri::command]
 fn finish_settings(app: AppHandle) -> Result<(), String> {
     autostart::sync(&app);
-    if let Some(widget) = app.get_webview_window(WIDGET) {
-        widget_options::apply(&widget, true).map_err(|e| e.to_string())?;
-    }
+    apply_widget_options(&app, true).map_err(|e| e.to_string())?;
     if let Some(settings) = app.get_webview_window(SETTINGS) {
         settings.hide().map_err(|e| e.to_string())?;
     }
@@ -134,7 +156,7 @@ pub fn run() {
             tray::build(handle)?;
             if let Some(widget) = app.get_webview_window(WIDGET) {
                 // 미니 모드 크기를 먼저 맞춰야 저장 위치·기본 위치 계산이 맞다
-                widget_options::apply(&widget, false)?;
+                apply_widget_options(handle, false)?;
                 position::place_widget(&widget)?;
             }
             if settings::is_configured(handle) {

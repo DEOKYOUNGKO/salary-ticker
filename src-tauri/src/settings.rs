@@ -24,3 +24,20 @@ pub fn auto_start<R: Runtime>(app: &AppHandle<R>) -> bool {
         .and_then(|s| s.get("autoStart").and_then(Value::as_bool))
         .unwrap_or(true)
 }
+
+/// settings.widget[key] 값을 바꿔 파일에 저장하고, 바뀐 전체 설정을 돌려준다.
+/// (트레이 메뉴처럼 설정 창을 거치지 않는 변경용)
+pub fn set_widget_option<R: Runtime>(app: &AppHandle<R>, key: &str, value: Value) -> Option<Value> {
+    let store = app.store(STORE_PATH).ok()?;
+    let mut settings = store.get(SETTINGS_KEY)?;
+    let root = settings.as_object_mut()?;
+    let widget = root
+        .entry("widget")
+        .or_insert_with(|| Value::Object(Default::default()));
+    widget.as_object_mut()?.insert(key.to_string(), value);
+    store.set(SETTINGS_KEY, settings.clone());
+    if let Err(e) = store.save() {
+        eprintln!("[settings] 저장 실패: {e}");
+    }
+    Some(settings)
+}

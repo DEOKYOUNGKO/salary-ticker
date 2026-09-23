@@ -12,7 +12,7 @@ import {
   type SettingsForm,
 } from "./form";
 import { DEFAULT_SETTINGS, isConfigured, type Settings } from "./schema";
-import { loadSettings, saveSettings } from "./store";
+import { loadSettings, onSettingsChanged, saveSettings } from "./store";
 import { useTheme } from "./useTheme";
 import "./SettingsPage.css";
 
@@ -38,8 +38,14 @@ export default function SettingsPage() {
     };
     reset();
     const unlisten = listen("settings-opened", reset);
+    // 트레이 메뉴에서 클릭 통과를 바꾸면 열려 있는 폼에도 반영 (저장 시 되돌리지 않게)
+    const unlistenChanged = onSettingsChanged((s) => {
+      setBase(s);
+      setForm((f) => ({ ...f, clickThrough: s.widget.clickThrough }));
+    });
     return () => {
       unlisten.then((fn) => fn());
+      unlistenChanged.then((fn) => fn());
     };
   }, []);
 
@@ -320,6 +326,21 @@ export default function SettingsPage() {
           </label>
         </div>
       </fieldset>
+
+      <div className="field">
+        <label className="check">
+          <input
+            type="checkbox"
+            checked={form.clickThrough}
+            onChange={(e) => update("clickThrough", e.target.checked)}
+          />
+          클릭 통과
+        </label>
+        <p className="hint">
+          위젯을 눌러도 뒤의 창이 클릭돼요. 켜면 위젯을 클릭·이동할 수 없으니 트레이 아이콘 메뉴의
+          "클릭 통과"로 꺼 주세요.
+        </p>
+      </div>
 
       <h2 className="section">기타</h2>
 
