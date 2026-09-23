@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "salary-ticker",
+  "productName": "Salary Ticker",
   "version": "0.1.0",
   "identifier": "com.salaryticker.app",
   "build": {
@@ -12,9 +12,12 @@
   "app": {
     "windows": [
       {
-        "title": "salary-ticker",
-        "width": 800,
-        "height": 600
+        "label": "widget",
+        "title": "월급 티커",
+        "width": 340,
+        "height": 230,
+        "resizable": false,
+        "maximizable": false
       }
     ],
     "security": {

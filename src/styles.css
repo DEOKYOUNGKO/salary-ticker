@@ -1,0 +1,92 @@
+:root {
+  color-scheme: light;
+  --card-bg: #ffffff;
+  --card-border: #e3e6eb;
+  --text: #14171c;
+  --muted: #667085;
+  --track: #e8ebf0;
+  --overlay-bg: rgba(255, 255, 255, 0.97);
+  --button-bg: #f1f3f6;
+  --button-hover: #e4e7ec;
+
+  --c-working: #15803d;
+  --c-lunch: #b45309;
+  --c-before: #1d4ed8;
+  --c-off: #6d28d9;
+  --c-holiday: #667085;
+  --c-dev: #c2410c;
+
+  font-family: "Segoe UI Variable Text", "Segoe UI", "Malgun Gothic", "Apple SD Gothic Neo",
+    sans-serif;
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  font-synthesis: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --card-bg: #1b1e24;
+    --card-border: #2c313a;
+    --text: #f2f4f7;
+    --muted: #98a2b3;
+    --track: #2c313a;
+    --overlay-bg: rgba(27, 30, 36, 0.97);
+    --button-bg: #262a32;
+    --button-hover: #323843;
+
+    --c-working: #4ade80;
+    --c-lunch: #fbbf24;
+    --c-before: #7aa7ff;
+    --c-off: #b79cff;
+    --c-holiday: #98a2b3;
+    --c-dev: #fb923c;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --card-bg: #1b1e24;
+  --card-border: #2c313a;
+  --text: #f2f4f7;
+  --muted: #98a2b3;
+  --track: #2c313a;
+  --overlay-bg: rgba(27, 30, 36, 0.97);
+  --button-bg: #262a32;
+  --button-hover: #323843;
+
+  --c-working: #4ade80;
+  --c-lunch: #fbbf24;
+  --c-before: #7aa7ff;
+  --c-off: #b79cff;
+  --c-holiday: #98a2b3;
+  --c-dev: #fb923c;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  /* 4단계에서 transparent로 바꾸고 카드만 보이게 함 */
+  background: var(--card-bg);
+  overflow: hidden;
+  user-select: none;
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
