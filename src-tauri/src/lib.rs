@@ -2,6 +2,7 @@ mod autostart;
 mod position;
 mod settings;
 mod tray;
+mod widget_options;
 
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;
@@ -69,10 +70,13 @@ fn hide_settings(app: AppHandle) -> Result<(), String> {
     }
 }
 
-/// 설정 저장 후: 자동 실행 반영, 설정 창 숨기고 위젯 표시
+/// 설정 저장 후: 자동 실행·위젯 옵션 반영, 설정 창 숨기고 위젯 표시
 #[tauri::command]
 fn finish_settings(app: AppHandle) -> Result<(), String> {
     autostart::sync(&app);
+    if let Some(widget) = app.get_webview_window(WIDGET) {
+        widget_options::apply(&widget, true).map_err(|e| e.to_string())?;
+    }
     if let Some(settings) = app.get_webview_window(SETTINGS) {
         settings.hide().map_err(|e| e.to_string())?;
     }
@@ -129,6 +133,8 @@ pub fn run() {
             let handle = app.handle();
             tray::build(handle)?;
             if let Some(widget) = app.get_webview_window(WIDGET) {
+                // 미니 모드 크기를 먼저 맞춰야 저장 위치·기본 위치 계산이 맞다
+                widget_options::apply(&widget, false)?;
                 position::place_widget(&widget)?;
             }
             if settings::is_configured(handle) {

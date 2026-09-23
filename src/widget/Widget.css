@@ -232,3 +232,45 @@
   background: var(--button-bg);
   color: var(--text);
 }
+
+/* ---- 미니 모드 ---- */
+
+.card.compact {
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  cursor: default;
+}
+
+.compact-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none; /* 드래그는 카드(deep)가 받음 */
+}
+
+.compact-amount {
+  flex: 1;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  white-space: nowrap;
+}
+
+.compact-amount .unit {
+  font-size: 13px;
+}
+
+.compact-status {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.progress.thin {
+  margin-top: 0;
+  height: 4px;
+  pointer-events: none;
+}

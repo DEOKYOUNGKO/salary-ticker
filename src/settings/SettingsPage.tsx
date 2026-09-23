@@ -283,6 +283,18 @@ export default function SettingsPage() {
         />
       </div>
 
+      <div className="field">
+        <label className="check">
+          <input
+            type="checkbox"
+            checked={form.compact}
+            onChange={(e) => update("compact", e.target.checked)}
+          />
+          미니 모드
+        </label>
+        <p className="hint">오늘 번 돈과 진행 바만 작게 보여 줘요. 설정은 트레이 메뉴에서 열어요.</p>
+      </div>
+
       <h2 className="section">기타</h2>
 
       <div className="field">

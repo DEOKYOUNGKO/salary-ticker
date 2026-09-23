@@ -47,6 +47,35 @@ function WidgetCard({ settings }: { settings: Settings }) {
   const e = useMemo(() => calculate(now, settings), [now, settings]);
 
   const progress = Math.round(e.todayProgress * 1000) / 10;
+  const statusLabel =
+    (e.status === "holiday" && settings.excludeHolidays && holidayName(now)) ||
+    STATUS_LABEL[e.status];
+
+  if (settings.widget.compact) {
+    // 미니 모드: 버튼 없이 카드 전체가 드래그 영역
+    return (
+      <main
+        className={`card compact status-${e.status}`}
+        style={{ opacity: settings.widget.opacity }}
+        data-tauri-drag-region="deep"
+        title={`${statusLabel} · ${nextStatusLabel(e)} ${
+          e.secondsToNextStatus === null ? "-" : formatDuration(e.secondsToNextStatus)
+        }`}
+      >
+        <div className="compact-row">
+          <span className="status-dot" aria-label={statusLabel} />
+          <span className="compact-amount">
+            {formatWon2(e.todayEarned)}
+            <span className="unit">원</span>
+          </span>
+          <span className="compact-status">{statusLabel}</span>
+        </div>
+        <div className="progress thin" aria-label="오늘 진행률">
+          <div className="progress-fill" style={{ width: `${progress}%` }} />
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className={`card status-${e.status}`} style={{ opacity: settings.widget.opacity }}>
@@ -54,8 +83,7 @@ function WidgetCard({ settings }: { settings: Settings }) {
       <header className="card-header" data-tauri-drag-region>
         <span className="status-pill" data-tauri-drag-region>
           <span className="status-dot" aria-hidden data-tauri-drag-region />
-          {(e.status === "holiday" && settings.excludeHolidays && holidayName(now)) ||
-            STATUS_LABEL[e.status]}
+          {statusLabel}
         </span>
         <span className="header-right" data-tauri-drag-region>
           <span className="clock" data-tauri-drag-region>{clockFormat.format(now)}</span>
