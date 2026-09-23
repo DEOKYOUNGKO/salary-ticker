@@ -12,6 +12,8 @@ import type { Settings } from "../settings/schema";
 import { useTheme } from "../settings/useTheme";
 import { useNow } from "./useNow";
 import { useSettings } from "./useSettings";
+import { useTrayTooltip } from "./useTrayTooltip";
+import { useWidgetVisible } from "./useWidgetVisible";
 import DevClock from "./DevClock";
 import "./Widget.css";
 
@@ -38,20 +40,24 @@ function WidgetCard({ settings }: { settings: Settings }) {
   const [offsetMs, setOffsetMs] = useState(0);
   const [devOpen, setDevOpen] = useState(false);
   const getNow = useCallback(() => new Date(Date.now() + offsetMs), [offsetMs]);
-  const now = useNow(TICK_MS, getNow);
+  const visible = useWidgetVisible();
+  // 창이 숨겨져 있으면 화면 갱신 중지 (트레이 툴팁은 1초마다 따로 갱신)
+  const now = useNow(TICK_MS, getNow, !visible);
+  useTrayTooltip(settings, getNow);
   const e = useMemo(() => calculate(now, settings), [now, settings]);
 
   const progress = Math.round(e.todayProgress * 1000) / 10;
 
   return (
     <main className={`card status-${e.status}`}>
-      <header className="card-header">
-        <span className="status-pill">
-          <span className="status-dot" aria-hidden />
+      {/* 상단 줄을 잡고 끌어서 이동. 드래그 속성은 클릭된 요소 자신에 있어야 해서 글자에도 붙임 */}
+      <header className="card-header" data-tauri-drag-region>
+        <span className="status-pill" data-tauri-drag-region>
+          <span className="status-dot" aria-hidden data-tauri-drag-region />
           {STATUS_LABEL[e.status]}
         </span>
-        <span className="header-right">
-          <span className="clock">{clockFormat.format(now)}</span>
+        <span className="header-right" data-tauri-drag-region>
+          <span className="clock" data-tauri-drag-region>{clockFormat.format(now)}</span>
           {import.meta.env.DEV && (
             <button
               type="button"
@@ -70,6 +76,15 @@ function WidgetCard({ settings }: { settings: Settings }) {
             aria-label="설정"
           >
             <GearIcon />
+          </button>
+          <button
+            type="button"
+            className="icon-button"
+            onClick={() => invoke("hide_widget")}
+            title="숨기기 (트레이 아이콘으로 다시 열기)"
+            aria-label="위젯 숨기기"
+          >
+            <CloseIcon />
           </button>
         </span>
       </header>
@@ -133,6 +148,14 @@ function GearIcon() {
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <circle cx="12" cy="12" r="3" />
       <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+  );
+}
+
+function CloseIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
+      <path d="M18 6 6 18M6 6l12 12" />
     </svg>
   );
 }

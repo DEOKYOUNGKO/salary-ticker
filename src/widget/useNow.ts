@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 
 /**
- * intervalMs마다 getNow()로 현재 시각을 갱신한다. 창(문서)이 숨겨져 있으면 멈춘다.
- * getNow가 바뀌면 즉시 다시 읽는다.
+ * intervalMs마다 getNow()로 현재 시각을 갱신한다.
+ * paused이거나 문서가 숨겨져 있으면 멈추고, 다시 보이면 즉시 새로 읽는다.
  */
-export function useNow(intervalMs: number, getNow: () => Date): Date {
+export function useNow(intervalMs: number, getNow: () => Date, paused = false): Date {
   const [now, setNow] = useState(getNow);
 
   useEffect(() => {
+    if (paused) return;
     let id: number | undefined;
     const start = () => {
       if (id !== undefined) return;
@@ -26,7 +27,7 @@ export function useNow(intervalMs: number, getNow: () => Date): Date {
       stop();
       document.removeEventListener("visibilitychange", onVisibilityChange);
     };
-  }, [intervalMs, getNow]);
+  }, [intervalMs, getNow, paused]);
 
   return now;
 }

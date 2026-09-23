@@ -94,9 +94,13 @@ body {
   background: var(--page-bg);
 }
 
-/* 위젯 창: 카드 하나만. 4단계에서 transparent로 바꿈 */
+/* 위젯 창: 투명 배경 위에 둥근 카드 하나만 */
+:root[data-window="widget"],
 :root[data-window="widget"] body {
-  background: var(--card-bg);
+  background: transparent;
+}
+
+:root[data-window="widget"] body {
   overflow: hidden;
   user-select: none;
 }

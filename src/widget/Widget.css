@@ -22,6 +22,8 @@
   align-items: center;
   justify-content: space-between;
   min-height: 22px;
+  margin: -4px -6px 0 0;
+  cursor: default;
 }
 
 .status-pill {
@@ -50,7 +52,7 @@
 .header-right {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 .clock {
