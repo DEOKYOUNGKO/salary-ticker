@@ -13,6 +13,7 @@ import { useTheme } from "../settings/useTheme";
 import { useNow } from "./useNow";
 import { useSettings } from "./useSettings";
 import { useTrayTooltip } from "./useTrayTooltip";
+import { useWorkEndNotification } from "./useWorkEndNotification";
 import { useWidgetVisible } from "./useWidgetVisible";
 import DevClock from "./DevClock";
 import "./Widget.css";
@@ -44,6 +45,7 @@ function WidgetCard({ settings }: { settings: Settings }) {
   // 창이 숨겨져 있으면 화면 갱신 중지 (트레이 툴팁은 1초마다 따로 갱신)
   const now = useNow(TICK_MS, getNow, !visible);
   useTrayTooltip(settings, getNow);
+  useWorkEndNotification(settings, getNow);
   const e = useMemo(() => calculate(now, settings), [now, settings]);
 
   const progress = Math.round(e.todayProgress * 1000) / 10;

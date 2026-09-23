@@ -19,7 +19,7 @@ Tauri 플러그인: store, autostart, notification, window-state.
 
 # 설정 스키마
 monthlySalary, mode('work'|'24h'), workStart, workEnd, lunch({start,end}|null),
-workDays(number[], 기본 월~금), periodStartDay(기본 1), excludeHolidays, autoStart, theme,
+workDays(number[], 기본 월~금), periodStartDay(기본 1), excludeHolidays, autoStart, notifyWorkEnd(퇴근 알림, 기본 켬), theme,
 widget{opacity, compact, placement('top'|'bottom'), clickThrough}
 
 # 창

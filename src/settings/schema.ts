@@ -13,6 +13,8 @@ export interface WidgetOptions {
 
 export interface Settings extends EngineSettings {
   autoStart: boolean;
+  /** 퇴근 시각 알림 */
+  notifyWorkEnd: boolean;
   theme: Theme;
   widget: WidgetOptions;
 }
@@ -21,6 +23,7 @@ export const DEFAULT_SETTINGS: Settings = {
   ...DEFAULT_ENGINE_SETTINGS,
   excludeHolidays: true,
   autoStart: true,
+  notifyWorkEnd: true,
   theme: "system",
   widget: {
     opacity: 1,

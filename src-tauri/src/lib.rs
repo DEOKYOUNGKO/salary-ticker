@@ -1,4 +1,5 @@
 mod autostart;
+mod notify;
 mod position;
 mod settings;
 mod tray;
@@ -103,6 +104,7 @@ fn finish_settings(app: AppHandle) -> Result<(), String> {
         settings.hide().map_err(|e| e.to_string())?;
     }
     set_widget_visible(&app, true);
+    notify::tray_hint_once(&app);
     Ok(())
 }
 
@@ -110,6 +112,12 @@ fn finish_settings(app: AppHandle) -> Result<(), String> {
 #[tauri::command]
 fn hide_widget(app: AppHandle) {
     set_widget_visible(&app, false);
+}
+
+/// 위젯에서 보내는 알림 (퇴근 시각)
+#[tauri::command]
+fn show_notification(app: AppHandle, title: String, body: String) {
+    notify::show(&app, &title, &body);
 }
 
 /// 트레이 툴팁 (오늘 번 돈)
@@ -135,6 +143,7 @@ fn schedule_position_save(app: &AppHandle) {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_store::Builder::new().build())
+        .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_autostart::Builder::new().build())
         .plugin(
             tauri_plugin_window_state::Builder::new()
@@ -149,7 +158,8 @@ pub fn run() {
             hide_settings,
             finish_settings,
             hide_widget,
-            set_tray_tooltip
+            set_tray_tooltip,
+            show_notification
         ])
         .setup(|app| {
             let handle = app.handle();

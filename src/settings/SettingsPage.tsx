@@ -348,6 +348,18 @@ export default function SettingsPage() {
         <label className="check">
           <input
             type="checkbox"
+            checked={form.notifyWorkEnd}
+            onChange={(e) => update("notifyWorkEnd", e.target.checked)}
+          />
+          퇴근 시각 알림
+        </label>
+        <p className="hint">퇴근 시간이 되면 오늘 번 돈과 함께 알려 드려요.</p>
+      </div>
+
+      <div className="field">
+        <label className="check">
+          <input
+            type="checkbox"
             checked={form.autoStart}
             onChange={(e) => update("autoStart", e.target.checked)}
           />

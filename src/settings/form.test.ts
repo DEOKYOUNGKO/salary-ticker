@@ -24,6 +24,7 @@ const valid: SettingsForm = {
   compact: false,
   placement: "top",
   clickThrough: false,
+  notifyWorkEnd: true,
   autoStart: true,
 };
 
@@ -97,6 +98,7 @@ describe("폼 ↔ 설정 변환", () => {
   it("저장값에 없는 필드는 기본값으로 채운다", () => {
     const s = withDefaults({ monthlySalary: 1, widget: { opacity: 0.5 } as never });
     expect(s.workDays).toEqual([1, 2, 3, 4, 5]);
+    expect(s.notifyWorkEnd).toBe(true);
     expect(s.widget).toEqual({ ...DEFAULT_SETTINGS.widget, opacity: 0.5 });
   });
 });

@@ -18,6 +18,7 @@ export interface SettingsForm {
   compact: boolean;
   placement: "top" | "bottom";
   clickThrough: boolean;
+  notifyWorkEnd: boolean;
   autoStart: boolean;
 }
 
@@ -41,6 +42,7 @@ export function settingsToForm(s: Settings): SettingsForm {
     compact: s.widget.compact,
     placement: s.widget.placement,
     clickThrough: s.widget.clickThrough,
+    notifyWorkEnd: s.notifyWorkEnd,
     autoStart: s.autoStart,
   };
 }
@@ -56,6 +58,7 @@ export function formToSettings(form: SettingsForm, base: Settings): Settings {
     lunch: form.lunchEnabled ? { start: form.lunchStart, end: form.lunchEnd } : null,
     excludeHolidays: form.excludeHolidays,
     periodStartDay: form.periodStartDay,
+    notifyWorkEnd: form.notifyWorkEnd,
     autoStart: form.autoStart,
     widget: {
       ...base.widget,
