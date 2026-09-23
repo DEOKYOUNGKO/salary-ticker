@@ -55,10 +55,12 @@ export default function SettingsPage() {
     const now = new Date();
     const perSecond = perSecondRate(now, draft);
     const period = getPayPeriod(now, draft.periodStartDay);
+    const last = new Date(period.end.getTime() - 1);
+    const range = `${period.start.getMonth() + 1}/${period.start.getDate()}~${last.getMonth() + 1}/${last.getDate()}`;
     const basis =
       draft.mode === "work"
-        ? `이번 달 근무일 ${countWorkDays(period, draft, KR_HOLIDAYS)}일 기준`
-        : `이번 달 ${Math.round((period.end.getTime() - period.start.getTime()) / 86_400_000)}일 기준`;
+        ? `급여 기간 ${range} · 근무일 ${countWorkDays(period, draft, KR_HOLIDAYS)}일 기준`
+        : `급여 기간 ${range} · ${Math.round((period.end.getTime() - period.start.getTime()) / 86_400_000)}일 기준`;
     return { perSecond, hourly: perSecond * 3600, basis };
   }, [form, base, errors]);
 
@@ -219,6 +221,31 @@ export default function SettingsPage() {
         <p className="hint">
           대체공휴일·선거일 포함, {HOLIDAY_YEARS.from}~{HOLIDAY_YEARS.to}년 공휴일 내장
         </p>
+      </div>
+
+      <div className="field">
+        <label htmlFor="periodStartDay">급여 기간</label>
+        <div className="inline-select">
+          매월
+          <select
+            id="periodStartDay"
+            value={form.periodStartDay}
+            onChange={(e) => update("periodStartDay", Number(e.target.value))}
+          >
+            {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
+              <option key={day} value={day}>
+                {day}일
+              </option>
+            ))}
+          </select>
+          부터
+          <span className="hint-inline">
+            {form.periodStartDay === 1
+              ? "1일~말일"
+              : `${form.periodStartDay}일~다음 달 ${form.periodStartDay - 1}일`}
+          </span>
+        </div>
+        <p className="hint flush">그 달에 없는 날짜(예: 31일)는 말일부터 시작해요.</p>
       </div>
 
       <div className="field">

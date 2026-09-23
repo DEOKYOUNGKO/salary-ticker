@@ -119,7 +119,7 @@ function WidgetCard({ settings }: { settings: Settings }) {
 
       <dl className="stats">
         <div>
-          <dt>이번 달 누적</dt>
+          <dt>{settings.periodStartDay === 1 ? "이번 달 누적" : "이번 기간 누적"}</dt>
           <dd>{formatWon0(e.periodEarned)}원</dd>
         </div>
         <div>

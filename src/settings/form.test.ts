@@ -19,6 +19,7 @@ const valid: SettingsForm = {
   lunchStart: "12:00",
   lunchEnd: "13:00",
   excludeHolidays: true,
+  periodStartDay: 1,
   autoStart: true,
 };
 
@@ -74,6 +75,10 @@ describe("폼 ↔ 설정 변환", () => {
     expect(settings.monthlySalary).toBe(3_000_000);
     expect(settings.lunch).toEqual({ start: "12:00", end: "13:00" });
     expect(settingsToForm(settings)).toEqual(valid);
+  });
+
+  it("급여 기간 시작일을 그대로 저장", () => {
+    expect(formToSettings({ ...valid, periodStartDay: 25 }, DEFAULT_SETTINGS).periodStartDay).toBe(25);
   });
 
   it("점심 제외를 끄면 lunch=null", () => {
