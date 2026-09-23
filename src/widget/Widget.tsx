@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
-import { calculate, type EngineSettings } from "../engine";
+import { invoke } from "@tauri-apps/api/core";
+import { calculate } from "../engine";
 import {
   formatDuration,
   formatWon0,
@@ -7,7 +8,10 @@ import {
   nextStatusLabel,
   STATUS_LABEL,
 } from "../format";
+import type { Settings } from "../settings/schema";
+import { useTheme } from "../settings/useTheme";
 import { useNow } from "./useNow";
+import { useSettings } from "./useSettings";
 import DevClock from "./DevClock";
 import "./Widget.css";
 
@@ -22,11 +26,14 @@ const clockFormat = new Intl.DateTimeFormat("ko-KR", {
   hour12: false,
 });
 
-interface Props {
-  settings: EngineSettings;
+export default function Widget() {
+  const settings = useSettings();
+  useTheme(settings?.theme ?? "system");
+  // 첫 실행에는 설정 저장 전까지 숨겨져 있으므로 빈 화면
+  return settings ? <WidgetCard settings={settings} /> : null;
 }
 
-export default function Widget({ settings }: Props) {
+function WidgetCard({ settings }: { settings: Settings }) {
   // 개발 모드 가짜 시각: 실제 시각과의 차이(ms). 프로덕션에서는 항상 0.
   const [offsetMs, setOffsetMs] = useState(0);
   const [devOpen, setDevOpen] = useState(false);
@@ -55,6 +62,15 @@ export default function Widget({ settings }: Props) {
               {offsetMs !== 0 ? "가짜" : "DEV"}
             </button>
           )}
+          <button
+            type="button"
+            className="icon-button"
+            onClick={() => invoke("open_settings")}
+            title="설정"
+            aria-label="설정"
+          >
+            <GearIcon />
+          </button>
         </span>
       </header>
 
@@ -109,5 +125,14 @@ export default function Widget({ settings }: Props) {
         />
       )}
     </main>
+  );
+}
+
+function GearIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
   );
 }

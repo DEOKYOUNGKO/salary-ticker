@@ -1,6 +1,10 @@
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import Widget from "./widget/Widget";
-import { HARDCODED_SETTINGS } from "./settings";
+import SettingsPage from "./settings/SettingsPage";
+
+const label = getCurrentWindow().label;
+document.documentElement.dataset.window = label;
 
 export default function App() {
-  return <Widget settings={HARDCODED_SETTINGS} />;
+  return label === "settings" ? <SettingsPage /> : <Widget />;
 }

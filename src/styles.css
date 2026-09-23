@@ -1,5 +1,6 @@
 :root {
   color-scheme: light;
+  --page-bg: #f4f5f7;
   --card-bg: #ffffff;
   --card-border: #e3e6eb;
   --text: #14171c;
@@ -15,6 +16,9 @@
   --c-off: #6d28d9;
   --c-holiday: #667085;
   --c-dev: #c2410c;
+  --c-error: #c62828;
+  --c-primary: #2563eb;
+  --c-primary-text: #ffffff;
 
   font-family: "Segoe UI Variable Text", "Segoe UI", "Malgun Gothic", "Apple SD Gothic Neo",
     sans-serif;
@@ -28,6 +32,7 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
+    --page-bg: #121418;
     --card-bg: #1b1e24;
     --card-border: #2c313a;
     --text: #f2f4f7;
@@ -43,11 +48,15 @@
     --c-off: #b79cff;
     --c-holiday: #98a2b3;
     --c-dev: #fb923c;
+    --c-error: #ff8a80;
+    --c-primary: #5b8cff;
+    --c-primary-text: #0b1020;
   }
 }
 
 :root[data-theme="dark"] {
   color-scheme: dark;
+  --page-bg: #121418;
   --card-bg: #1b1e24;
   --card-border: #2c313a;
   --text: #f2f4f7;
@@ -63,6 +72,9 @@
   --c-off: #b79cff;
   --c-holiday: #98a2b3;
   --c-dev: #fb923c;
+  --c-error: #ff8a80;
+  --c-primary: #5b8cff;
+  --c-primary-text: #0b1020;
 }
 
 *,
@@ -79,7 +91,11 @@ body,
 }
 
 body {
-  /* 4단계에서 transparent로 바꾸고 카드만 보이게 함 */
+  background: var(--page-bg);
+}
+
+/* 위젯 창: 카드 하나만. 4단계에서 transparent로 바꿈 */
+:root[data-window="widget"] body {
   background: var(--card-bg);
   overflow: hidden;
   user-select: none;
