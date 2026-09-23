@@ -1,4 +1,4 @@
-//! 저장된 settings.widget 값(미니 모드 등)을 위젯 창에 반영한다.
+//! 저장된 settings.widget 값(미니 모드, 바탕화면 고정 등)을 위젯 창에 반영한다.
 
 use serde_json::Value;
 use tauri::{AppHandle, LogicalSize, Manager, PhysicalPosition, Runtime, WebviewWindow};
@@ -10,6 +10,8 @@ const COMPACT_SIZE: (f64, f64) = (240.0, 64.0);
 #[derive(Debug, Default, Clone, Copy)]
 pub struct WidgetOptions {
     pub compact: bool,
+    /// placement == "bottom": 항상 위 대신 다른 창들 아래(바탕화면 고정)
+    pub on_bottom: bool,
 }
 
 pub fn read<R: Runtime>(app: &AppHandle<R>) -> WidgetOptions {
@@ -22,6 +24,10 @@ pub fn read<R: Runtime>(app: &AppHandle<R>) -> WidgetOptions {
     };
     WidgetOptions {
         compact: flag("compact"),
+        on_bottom: widget
+            .as_ref()
+            .and_then(|w| w.get("placement").and_then(Value::as_str))
+            == Some("bottom"),
     }
 }
 
@@ -73,5 +79,13 @@ fn apply_size<R: Runtime>(
 /// 저장된 옵션을 위젯 창에 반영. 앱 시작 시에는 저장 위치를 복원하기 전이라 anchor=false.
 pub fn apply<R: Runtime>(window: &WebviewWindow<R>, anchor: bool) -> tauri::Result<()> {
     let options = read(window.app_handle());
+    // 둘 다 켜지지 않도록 끄는 쪽을 먼저
+    if options.on_bottom {
+        window.set_always_on_top(false)?;
+        window.set_always_on_bottom(true)?;
+    } else {
+        window.set_always_on_bottom(false)?;
+        window.set_always_on_top(true)?;
+    }
     apply_size(window, options.compact, anchor)
 }

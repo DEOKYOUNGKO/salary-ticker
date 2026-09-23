@@ -295,6 +295,32 @@ export default function SettingsPage() {
         <p className="hint">오늘 번 돈과 진행 바만 작게 보여 줘요. 설정은 트레이 메뉴에서 열어요.</p>
       </div>
 
+      <fieldset className="field">
+        <legend>창 배치</legend>
+        <div className="segmented">
+          <label className={form.placement === "top" ? "selected" : ""}>
+            <input
+              type="radio"
+              name="placement"
+              checked={form.placement === "top"}
+              onChange={() => update("placement", "top")}
+            />
+            <strong>항상 위</strong>
+            <span>다른 창 위에 떠 있어요</span>
+          </label>
+          <label className={form.placement === "bottom" ? "selected" : ""}>
+            <input
+              type="radio"
+              name="placement"
+              checked={form.placement === "bottom"}
+              onChange={() => update("placement", "bottom")}
+            />
+            <strong>바탕화면 고정</strong>
+            <span>다른 창 아래에 깔려요</span>
+          </label>
+        </div>
+      </fieldset>
+
       <h2 className="section">기타</h2>
 
       <div className="field">

@@ -16,6 +16,7 @@ export interface SettingsForm {
   /** 위젯 불투명도 0.2~1 */
   opacity: number;
   compact: boolean;
+  placement: "top" | "bottom";
   autoStart: boolean;
 }
 
@@ -37,6 +38,7 @@ export function settingsToForm(s: Settings): SettingsForm {
     periodStartDay: s.periodStartDay,
     opacity: s.widget.opacity,
     compact: s.widget.compact,
+    placement: s.widget.placement,
     autoStart: s.autoStart,
   };
 }
@@ -57,6 +59,7 @@ export function formToSettings(form: SettingsForm, base: Settings): Settings {
       ...base.widget,
       opacity: form.opacity,
       compact: form.compact,
+      placement: form.placement,
     },
   };
 }

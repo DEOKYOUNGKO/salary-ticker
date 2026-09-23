@@ -22,6 +22,7 @@ const valid: SettingsForm = {
   periodStartDay: 1,
   opacity: 1,
   compact: false,
+  placement: "top",
   autoStart: true,
 };
 
