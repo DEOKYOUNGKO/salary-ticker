@@ -35,6 +35,7 @@ describe("내장 공휴일 데이터", () => {
       "2026-08-17",
       "2026-10-05",
       "2027-02-09",
+      "2027-07-19",
       "2027-08-16",
       "2027-10-04",
       "2027-10-11",
@@ -82,6 +83,40 @@ describe("2026년 추석 (9/24~9/26)", () => {
   it("추석 전날 퇴근 후 다음 출근은 9/28(월) 09:00", () => {
     const r = calculate(at(2026, 9, 23, 19), work);
     expect(r.secondsToNextStatus).toBe((4 * 24 + 14) * 3600);
+  });
+});
+
+describe("노동절·제헌절 (2026년 4월 관공서 공휴일 지정)", () => {
+  it.each([
+    ["2026-05-01", "노동절", at(2026, 5, 1, 10)],
+    ["2026-07-17", "제헌절", at(2026, 7, 17, 10)],
+  ])("%s %s(평일)는 휴일, 증가 0", (_, name, date) => {
+    expect(holidayName(date)).toBe(name);
+    const r = calculate(date, work);
+    expect(r.status).toBe("holiday");
+    expect(r.todayEarned).toBe(0);
+  });
+
+  it("2027년 노동절(토)·제헌절(토)도 목록에 있다", () => {
+    expect(holidayName(at(2027, 5, 1))).toBe("노동절");
+    expect(holidayName(at(2027, 7, 17))).toBe("제헌절");
+  });
+
+  it("2027년 제헌절이 토요일이라 7/19(월)가 대체공휴일", () => {
+    expect(holidayName(at(2027, 7, 19))).toBe("대체공휴일(제헌절)");
+    expect(calculate(at(2027, 7, 19, 10), work).status).toBe("holiday");
+    // 7/16(금) 퇴근 후 다음 출근은 7/20(화) 09:00
+    expect(calculate(at(2027, 7, 16, 19), work).secondsToNextStatus).toBe((3 * 24 + 14) * 3600);
+  });
+
+  it("근무일 수에 반영: 2026년 5월 평일 21일 - 노동절 - 어린이날 - 부처님오신날 대체공휴일 = 18일", () => {
+    const period = getPayPeriod(at(2026, 5, 10), 1);
+    expect(countWorkDays(period, work, KR_HOLIDAYS)).toBe(18);
+  });
+
+  it("2026년 7월 평일 23일 - 제헌절 = 22일", () => {
+    const period = getPayPeriod(at(2026, 7, 10), 1);
+    expect(countWorkDays(period, work, KR_HOLIDAYS)).toBe(22);
   });
 });
 
