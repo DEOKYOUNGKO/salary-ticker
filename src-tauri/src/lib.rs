@@ -142,6 +142,11 @@ fn schedule_position_save(app: &AppHandle) {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        // 가장 먼저 등록해야 한다. 이미 실행 중이면 새 프로세스는 바로 끝나고,
+        // 기존 앱이 위젯을 보여 준다 (설정 전이면 set_widget_visible이 설정 창을 연다).
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            set_widget_visible(app, true);
+        }))
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_autostart::Builder::new().build())
