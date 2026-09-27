@@ -74,6 +74,18 @@ describe("validateForm", () => {
   });
 });
 
+describe("기본값", () => {
+  it("월급 2,156,880원, 08:30~17:30, 점심 12:30~13:30이 첫 실행 폼에 채워진다", () => {
+    const form = settingsToForm(DEFAULT_SETTINGS);
+    expect(form.salaryText).toBe("2,156,880");
+    expect(form.workStart).toBe("08:30");
+    expect(form.workEnd).toBe("17:30");
+    expect(form.lunchEnabled).toBe(true);
+    expect([form.lunchStart, form.lunchEnd]).toEqual(["12:30", "13:30"]);
+    expect(validateForm(form)).toEqual({});
+  });
+});
+
 describe("폼 ↔ 설정 변환", () => {
   it("왕복 변환 시 값 유지", () => {
     const settings = formToSettings(valid, DEFAULT_SETTINGS);

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { parseTime, type EngineSettings } from "../engine";
 
 /** 오늘이 평일이면 오늘, 주말이면 직전 금요일 00:00 */
 function baseWeekday(today: Date): Date {
@@ -7,24 +8,35 @@ function baseWeekday(today: Date): Date {
   return d;
 }
 
-function at(day: Date, h: number, m: number, s = 0, addDays = 0): Date {
-  return new Date(day.getFullYear(), day.getMonth(), day.getDate() + addDays, h, m, s);
+/** day 00:00에서 seconds초 뒤 */
+function at(day: Date, seconds: number, addDays = 0): Date {
+  const d = new Date(day.getFullYear(), day.getMonth(), day.getDate() + addDays);
+  return new Date(d.getTime() + seconds * 1000);
 }
 
-/** 프리셋: 이번 평일 기준. "직전"은 10초 뒤 상태가 바뀌는 시각. */
-function presets(): { label: string; time: Date }[] {
+/** 프리셋: 이번 평일, 설정된 출퇴근·점심 시각 기준. "직전"은 10초 뒤 상태가 바뀌는 시각. */
+function presets(settings: EngineSettings): { label: string; time: Date }[] {
   const day = baseWeekday(new Date());
   const toSaturday = 6 - day.getDay();
-  return [
-    { label: "출근 직전", time: at(day, 8, 59, 50) },
-    { label: "근무 중", time: at(day, 10, 0) },
-    { label: "점심 직전", time: at(day, 11, 59, 50) },
-    { label: "점심", time: at(day, 12, 30) },
-    { label: "퇴근 직전", time: at(day, 17, 59, 50) },
-    { label: "퇴근 후", time: at(day, 19, 0) },
-    { label: "주말", time: at(day, 11, 0, 0, toSaturday) },
-    { label: "출근 전", time: at(day, 7, 30) },
+  const start = parseTime(settings.workStart);
+  const end = parseTime(settings.workEnd);
+  const lunchStart = settings.lunch ? parseTime(settings.lunch.start) : null;
+  const lunchEnd = settings.lunch ? parseTime(settings.lunch.end) : null;
+  const list = [
+    { label: "출근 직전", time: at(day, start - 10) },
+    { label: "근무 중", time: at(day, start + 3600) },
+    ...(lunchStart !== null && lunchEnd !== null
+      ? [
+          { label: "점심 직전", time: at(day, lunchStart - 10) },
+          { label: "점심", time: at(day, (lunchStart + lunchEnd) / 2) },
+        ]
+      : []),
+    { label: "퇴근 직전", time: at(day, end - 10) },
+    { label: "퇴근 후", time: at(day, end + 3600) },
+    { label: "주말", time: at(day, 11 * 3600, toSaturday) },
+    { label: "출근 전", time: at(day, start - 3600) },
   ];
+  return list;
 }
 
 /** Date → datetime-local 입력 값 "YYYY-MM-DDTHH:MM:SS" */
@@ -34,6 +46,7 @@ function toInputValue(d: Date): string {
 }
 
 interface Props {
+  settings: EngineSettings;
   now: Date;
   isFake: boolean;
   onSet: (target: Date | null) => void;
@@ -41,7 +54,7 @@ interface Props {
 }
 
 /** 개발 모드 전용 가짜 현재 시각 패널. 설정한 시각부터 시계가 계속 흐른다. */
-export default function DevClock({ now, isFake, onSet, onClose }: Props) {
+export default function DevClock({ settings, now, isFake, onSet, onClose }: Props) {
   const [custom, setCustom] = useState(() => toInputValue(now));
 
   const apply = (target: Date | null) => {
@@ -58,7 +71,7 @@ export default function DevClock({ now, isFake, onSet, onClose }: Props) {
         </button>
       </div>
       <div className="dev-presets">
-        {presets().map((p) => (
+        {presets(settings).map((p) => (
           <button key={p.label} type="button" onClick={() => apply(p.time)}>
             {p.label}
           </button>

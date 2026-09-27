@@ -164,6 +164,7 @@ function WidgetCard({ settings }: { settings: Settings }) {
 
       {import.meta.env.DEV && devOpen && (
         <DevClock
+          settings={settings}
           now={now}
           isFake={offsetMs !== 0}
           onSet={(target) => setOffsetMs(target ? target.getTime() - Date.now() : 0)}

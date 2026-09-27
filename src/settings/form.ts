@@ -1,5 +1,5 @@
 import { parseTime, type Mode } from "../engine";
-import type { Settings } from "./schema";
+import { DEFAULT_SETTINGS, type Settings } from "./schema";
 
 /** 설정 창 입력 상태 (문자열 그대로) */
 export interface SettingsForm {
@@ -34,8 +34,8 @@ export function settingsToForm(s: Settings): SettingsForm {
     workStart: s.workStart,
     workEnd: s.workEnd,
     lunchEnabled: s.lunch !== null,
-    lunchStart: s.lunch?.start ?? "12:00",
-    lunchEnd: s.lunch?.end ?? "13:00",
+    lunchStart: s.lunch?.start ?? DEFAULT_SETTINGS.lunch?.start ?? "12:30",
+    lunchEnd: s.lunch?.end ?? DEFAULT_SETTINGS.lunch?.end ?? "13:30",
     excludeHolidays: s.excludeHolidays,
     periodStartDay: s.periodStartDay,
     opacity: s.widget.opacity,

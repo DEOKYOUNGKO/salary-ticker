@@ -19,8 +19,13 @@ export interface Settings extends EngineSettings {
   widget: WidgetOptions;
 }
 
+/** 첫 실행 폼에 미리 채워지는 기본값 */
 export const DEFAULT_SETTINGS: Settings = {
   ...DEFAULT_ENGINE_SETTINGS,
+  monthlySalary: 2_156_880,
+  workStart: "08:30",
+  workEnd: "17:30",
+  lunch: { start: "12:30", end: "13:30" },
   excludeHolidays: true,
   autoStart: true,
   notifyWorkEnd: true,
