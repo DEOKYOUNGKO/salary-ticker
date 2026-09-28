@@ -21,6 +21,15 @@ Tauri 플러그인: store, autostart, notification, window-state.
 monthlySalary, mode('work'|'24h'), workStart, workEnd, lunch({start,end}|null),
 workDays(number[], 기본 월~금), periodStartDay(기본 1), excludeHolidays, autoStart, notifyWorkEnd(퇴근 알림, 기본 켬), theme,
 widget{opacity, placement('top'|'bottom'), clickThrough}. 위젯 크기·위치는 window-state 파일에 저장.
+deductions{nationalPension, healthInsurance, longTermCare, employmentInsurance, incomeTax, localIncomeTax}(원, 기본 0), payBasis('gross'|'net', 기본 'gross').
+기존 저장값을 불러올 때 빠진 필드는 기본값으로 채움(공제 0, 세전).
+
+# 공제 / 표시 기준 (src/settings/pay.ts)
+- 공제 6개 항목은 원 단위 직접 입력. 세율로 자동 계산하지 않음. 빈칸은 0, 합계 자동 표시.
+- 세후면 엔진에 넘기는 monthlySalary만 (월급 - 공제 합계)로 바꿈(toEngineSettings). 엔진은 수정하지 않음.
+- 공제 합계가 0이면 표시 기준과 관계없이 입력한 월급 그대로 계산, 세후 선택 비활성화.
+- 공제 합계가 월급 이상이면 에러.
+- 위젯 상단에 세전/세후 작게 표시(가장 작은 크기에서는 숨김).
 
 # 창
 widget: 최대 340x230, 최소 180x44(금액 한 줄), decorations false, transparent true, shadow false, alwaysOnTop true, skipTaskbar true, resizable true, maximizable false.

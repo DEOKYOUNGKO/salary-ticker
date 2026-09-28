@@ -1,5 +1,6 @@
 import { parseTime, type Mode } from "../engine";
-import { DEFAULT_SETTINGS, type Settings } from "./schema";
+import { deductionTotal } from "./pay";
+import { DEDUCTION_KEYS, DEFAULT_SETTINGS, type Deductions, type PayBasis, type Settings } from "./schema";
 
 /** 설정 창 입력 상태 (문자열 그대로) */
 export interface SettingsForm {
@@ -13,6 +14,9 @@ export interface SettingsForm {
   excludeHolidays: boolean;
   /** 1~31 */
   periodStartDay: number;
+  /** 공제 항목별 입력 (콤마 포함, 빈칸은 0) */
+  deductionTexts: Record<keyof Deductions, string>;
+  payBasis: PayBasis;
   /** 위젯 불투명도 0.2~1 */
   opacity: number;
   placement: "top" | "bottom";
@@ -21,7 +25,7 @@ export interface SettingsForm {
   autoStart: boolean;
 }
 
-export type FormField = "salary" | "workTime" | "lunch";
+export type FormField = "salary" | "workTime" | "lunch" | "deductions";
 export type FormErrors = Partial<Record<FormField, string>>;
 
 const MAX_SALARY = 10_000_000_000; // 100억
@@ -37,6 +41,10 @@ export function settingsToForm(s: Settings): SettingsForm {
     lunchEnd: s.lunch?.end ?? DEFAULT_SETTINGS.lunch?.end ?? "13:30",
     excludeHolidays: s.excludeHolidays,
     periodStartDay: s.periodStartDay,
+    deductionTexts: mapDeductions((key) =>
+      s.deductions[key] > 0 ? formatSalary(String(s.deductions[key])) : "",
+    ),
+    payBasis: s.payBasis,
     opacity: s.widget.opacity,
     placement: s.widget.placement,
     clickThrough: s.widget.clickThrough,
@@ -47,6 +55,7 @@ export function settingsToForm(s: Settings): SettingsForm {
 
 /** 폼 값을 기존 설정에 덮어쓴다. validateForm 통과 후에 호출. */
 export function formToSettings(form: SettingsForm, base: Settings): Settings {
+  const deductions = formDeductions(form);
   return {
     ...base,
     monthlySalary: parseSalary(form.salaryText) ?? 0,
@@ -56,6 +65,9 @@ export function formToSettings(form: SettingsForm, base: Settings): Settings {
     lunch: form.lunchEnabled ? { start: form.lunchStart, end: form.lunchEnd } : null,
     excludeHolidays: form.excludeHolidays,
     periodStartDay: form.periodStartDay,
+    deductions,
+    // 공제가 없으면 세후를 고를 수 없으므로 세전으로 저장
+    payBasis: deductionTotal(deductions) > 0 ? form.payBasis : "gross",
     notifyWorkEnd: form.notifyWorkEnd,
     autoStart: form.autoStart,
     widget: {
@@ -66,6 +78,13 @@ export function formToSettings(form: SettingsForm, base: Settings): Settings {
     },
   };
 }
+
+const mapDeductions = <T>(fn: (key: keyof Deductions) => T): Record<keyof Deductions, T> =>
+  Object.fromEntries(DEDUCTION_KEYS.map((key) => [key, fn(key)])) as Record<keyof Deductions, T>;
+
+/** 공제 입력 → 원 단위 값 (빈칸은 0) */
+export const formDeductions = (form: SettingsForm): Deductions =>
+  mapDeductions((key) => parseSalary(form.deductionTexts[key]) ?? 0);
 
 /** "3,000,000" → 3000000, 빈 값 → null */
 export function parseSalary(text: string): number | null {
@@ -88,6 +107,10 @@ export function validateForm(form: SettingsForm): FormErrors {
   if (salary === null) errors.salary = "월급을 입력해 주세요.";
   else if (salary <= 0) errors.salary = "0원보다 큰 금액을 입력해 주세요.";
   else if (salary > MAX_SALARY) errors.salary = "100억 원 이하로 입력해 주세요.";
+
+  if (!errors.salary && salary !== null && deductionTotal(formDeductions(form)) >= salary) {
+    errors.deductions = "공제 합계는 월급보다 작아야 합니다.";
+  }
 
   const start = tryParseTime(form.workStart);
   const end = tryParseTime(form.workEnd);

@@ -40,6 +40,52 @@
   color: var(--c-primary);
 }
 
+.optional {
+  margin-left: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.deductions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 12px;
+}
+
+.deduction {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.deduction .input-with-unit {
+  gap: 6px;
+}
+
+.deduction .input-with-unit input {
+  font-size: 14px;
+}
+
+.deduction-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+.deduction-total span {
+  color: var(--muted);
+}
+
+.segmented label.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .settings input[type="text"],
 .settings input[type="time"] {
   height: 36px;

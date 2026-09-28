@@ -6,11 +6,12 @@ import { formatWon0 } from "../format";
 const TOOLTIP_MS = 1000;
 
 /** 트레이 툴팁에 오늘 번 돈. 위젯이 숨겨져 있어도 계속 갱신한다. */
-export function useTrayTooltip(settings: EngineSettings, getNow: () => Date) {
+/** payLabel: "세전"/"세후" */
+export function useTrayTooltip(settings: EngineSettings, getNow: () => Date, payLabel: string) {
   useEffect(() => {
     let last = "";
     const update = () => {
-      const text = `월급 티커\n오늘 번 돈 ${formatWon0(calculate(getNow(), settings).todayEarned)}원`;
+      const text = `월급 티커\n오늘 번 돈(${payLabel}) ${formatWon0(calculate(getNow(), settings).todayEarned)}원`;
       if (text === last) return;
       last = text;
       invoke("set_tray_tooltip", { text }).catch(() => {});
@@ -18,5 +19,5 @@ export function useTrayTooltip(settings: EngineSettings, getNow: () => Date) {
     update();
     const id = window.setInterval(update, TOOLTIP_MS);
     return () => window.clearInterval(id);
-  }, [settings, getNow]);
+  }, [settings, getNow, payLabel]);
 }

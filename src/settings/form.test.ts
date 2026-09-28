@@ -20,6 +20,15 @@ const valid: SettingsForm = {
   lunchEnd: "13:00",
   excludeHolidays: true,
   periodStartDay: 1,
+  deductionTexts: {
+    nationalPension: "",
+    healthInsurance: "",
+    longTermCare: "",
+    employmentInsurance: "",
+    incomeTax: "",
+    localIncomeTax: "",
+  },
+  payBasis: "gross",
   opacity: 1,
   placement: "top",
   clickThrough: false,
@@ -70,6 +79,35 @@ describe("validateForm", () => {
     expect(validateForm({ ...valid, lunchStart: "08:00", lunchEnd: "09:30" }).lunch).toBeDefined();
     // 점심 제외를 끄면 검사 안 함
     expect(validateForm({ ...valid, lunchEnabled: false, lunchEnd: "11:00" })).toEqual({});
+  });
+});
+
+describe("공제", () => {
+  const withDeductions = (texts: Partial<SettingsForm["deductionTexts"]>): SettingsForm => ({
+    ...valid,
+    deductionTexts: { ...valid.deductionTexts, ...texts },
+  });
+
+  it("빈칸은 0으로 저장한다", () => {
+    const s = formToSettings(withDeductions({ incomeTax: "123,550" }), DEFAULT_SETTINGS);
+    expect(s.deductions).toEqual({ ...DEFAULT_SETTINGS.deductions, incomeTax: 123_550 });
+  });
+
+  it("공제 합계가 월급 이상이면 에러", () => {
+    expect(validateForm(withDeductions({ incomeTax: "2,999,999" })).deductions).toBeUndefined();
+    expect(validateForm(withDeductions({ incomeTax: "3,000,000" })).deductions).toBe(
+      "공제 합계는 월급보다 작아야 합니다.",
+    );
+    expect(
+      validateForm(withDeductions({ incomeTax: "2,000,000", nationalPension: "1,500,000" })).deductions,
+    ).toBeDefined();
+  });
+
+  it("공제가 없으면 세후를 골라도 세전으로 저장", () => {
+    expect(formToSettings({ ...valid, payBasis: "net" }, DEFAULT_SETTINGS).payBasis).toBe("gross");
+    const s = formToSettings({ ...withDeductions({ incomeTax: "1,000" }), payBasis: "net" }, DEFAULT_SETTINGS);
+    expect(s.payBasis).toBe("net");
+    expect(settingsToForm(s).deductionTexts.incomeTax).toBe("1,000");
   });
 });
 

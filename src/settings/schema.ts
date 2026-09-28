@@ -10,7 +10,37 @@ export interface WidgetOptions {
   clickThrough: boolean;
 }
 
+/** 매달 월급에서 빠지는 공제액 (원). 세율로 계산하지 않고 직접 입력한 값. */
+export interface Deductions {
+  /** 국민연금 */
+  nationalPension: number;
+  /** 건강보험 */
+  healthInsurance: number;
+  /** 장기요양보험 */
+  longTermCare: number;
+  /** 고용보험 */
+  employmentInsurance: number;
+  /** 소득세 */
+  incomeTax: number;
+  /** 지방소득세 */
+  localIncomeTax: number;
+}
+
+export const DEDUCTION_KEYS = [
+  "nationalPension",
+  "healthInsurance",
+  "longTermCare",
+  "employmentInsurance",
+  "incomeTax",
+  "localIncomeTax",
+] as const satisfies readonly (keyof Deductions)[];
+
+/** 표시 기준: 세전(월급 그대로) / 세후(월급 - 공제 합계) */
+export type PayBasis = "gross" | "net";
+
 export interface Settings extends EngineSettings {
+  deductions: Deductions;
+  payBasis: PayBasis;
   autoStart: boolean;
   /** 퇴근 시각 알림 */
   notifyWorkEnd: boolean;
@@ -26,6 +56,15 @@ export const DEFAULT_SETTINGS: Settings = {
   workEnd: "17:30",
   lunch: { start: "12:30", end: "13:30" },
   excludeHolidays: true,
+  deductions: {
+    nationalPension: 0,
+    healthInsurance: 0,
+    longTermCare: 0,
+    employmentInsurance: 0,
+    incomeTax: 0,
+    localIncomeTax: 0,
+  },
+  payBasis: "gross",
   autoStart: true,
   notifyWorkEnd: true,
   theme: "system",
@@ -41,6 +80,7 @@ export function withDefaults(saved: Partial<Settings> | null | undefined): Setti
   return {
     ...DEFAULT_SETTINGS,
     ...saved,
+    deductions: { ...DEFAULT_SETTINGS.deductions, ...saved?.deductions },
     widget: { ...DEFAULT_SETTINGS.widget, ...saved?.widget },
   };
 }

@@ -41,6 +41,17 @@
   background: var(--accent);
 }
 
+/* 세전/세후 표시 */
+.pay-basis {
+  padding: 0 5px;
+  border: 1px solid var(--card-border);
+  border-radius: 5px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 15px;
+  color: var(--muted);
+}
+
 .status-working .status-dot {
   animation: pulse 1.6s ease-in-out infinite;
 }

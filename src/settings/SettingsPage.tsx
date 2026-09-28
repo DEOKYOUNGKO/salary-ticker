@@ -5,16 +5,27 @@ import { countWorkDays, getPayPeriod, HOLIDAY_YEARS, KR_HOLIDAYS, perSecondRate 
 import { formatWon0, formatWon2 } from "../format";
 import {
   formatSalaryInput,
+  formDeductions,
   formToSettings,
   settingsToForm,
   validateForm,
   type FormField,
   type SettingsForm,
 } from "./form";
-import { DEFAULT_SETTINGS, isConfigured, type Settings } from "./schema";
+import { deductionTotal, effectivePayBasis, PAY_BASIS_LABEL, toEngineSettings } from "./pay";
+import { DEDUCTION_KEYS, DEFAULT_SETTINGS, isConfigured, type Deductions, type Settings } from "./schema";
 import { loadSettings, onSettingsChanged, saveSettings } from "./store";
 import { useTheme } from "./useTheme";
 import "./SettingsPage.css";
+
+const DEDUCTION_LABEL: Record<keyof Deductions, string> = {
+  nationalPension: "국민연금",
+  healthInsurance: "건강보험",
+  longTermCare: "장기요양보험",
+  employmentInsurance: "고용보험",
+  incomeTax: "소득세",
+  localIncomeTax: "지방소득세",
+};
 
 export default function SettingsPage() {
   const [base, setBase] = useState<Settings | null>(null);
@@ -55,9 +66,14 @@ export default function SettingsPage() {
   const errors = useMemo(() => validateForm(form), [form]);
   const showError = (field: FormField) => (submitted || touched[field]) && errors[field];
 
+  const deductionSum = useMemo(() => deductionTotal(formDeductions(form)), [form]);
+  const netAvailable = deductionSum > 0;
+  const payBasis = netAvailable ? form.payBasis : "gross";
+
   const preview = useMemo(() => {
-    if (errors.salary || errors.workTime || errors.lunch) return null;
-    const draft = formToSettings(form, base ?? DEFAULT_SETTINGS);
+    if (errors.salary || errors.workTime || errors.lunch || errors.deductions) return null;
+    const saved = formToSettings(form, base ?? DEFAULT_SETTINGS);
+    const draft = toEngineSettings(saved);
     const now = new Date();
     const perSecond = perSecondRate(now, draft);
     const period = getPayPeriod(now, draft.periodStartDay);
@@ -67,7 +83,8 @@ export default function SettingsPage() {
       draft.mode === "work"
         ? `급여 기간 ${range} · 근무일 ${countWorkDays(period, draft, KR_HOLIDAYS)}일 기준`
         : `급여 기간 ${range} · ${Math.round((period.end.getTime() - period.start.getTime()) / 86_400_000)}일 기준`;
-    return { perSecond, hourly: perSecond * 3600, basis };
+    const payLabel = PAY_BASIS_LABEL[effectivePayBasis(saved)];
+    return { perSecond, hourly: perSecond * 3600, basis: `${payLabel} ${formatWon0(draft.monthlySalary)}원 · ${basis}` };
   }, [form, base, errors]);
 
   const update = <K extends keyof SettingsForm>(key: K, value: SettingsForm[K], field?: FormField) => {
@@ -79,6 +96,14 @@ export default function SettingsPage() {
     const input = e.target;
     const { text, caret } = formatSalaryInput(input.value, input.selectionStart ?? input.value.length);
     update("salaryText", text, "salary");
+    requestAnimationFrame(() => input.setSelectionRange(caret, caret));
+  };
+
+  const onDeductionChange = (key: keyof Deductions) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target;
+    const { text, caret } = formatSalaryInput(input.value, input.selectionStart ?? input.value.length);
+    setForm((f) => ({ ...f, deductionTexts: { ...f.deductionTexts, [key]: text } }));
+    setTouched((t) => ({ ...t, deductions: true }));
     requestAnimationFrame(() => input.setSelectionRange(caret, caret));
   };
 
@@ -134,6 +159,70 @@ export default function SettingsPage() {
           {showError("salary") || ""}
         </p>
       </div>
+
+      <fieldset className="field">
+        <legend>
+          월 공제액 <span className="optional">선택</span>
+        </legend>
+        <div className={`deductions${showError("deductions") ? " invalid" : ""}`}>
+          {DEDUCTION_KEYS.map((key) => (
+            <label key={key} className="deduction">
+              <span>{DEDUCTION_LABEL[key]}</span>
+              <span className="input-with-unit">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  placeholder="0"
+                  value={form.deductionTexts[key]}
+                  onChange={onDeductionChange(key)}
+                  onBlur={() => setTouched((t) => ({ ...t, deductions: true }))}
+                  aria-invalid={!!showError("deductions")}
+                />
+                <span className="unit">원</span>
+              </span>
+            </label>
+          ))}
+        </div>
+        <div className="deduction-total">
+          <span>공제 합계</span>
+          <strong>{formatWon0(deductionSum)}원</strong>
+        </div>
+        <p className="error" role="alert">
+          {showError("deductions") || ""}
+        </p>
+        <p className="hint flush">급여명세서의 금액을 원 단위로 적어 주세요. 빈칸은 0원이에요.</p>
+      </fieldset>
+
+      <fieldset className="field">
+        <legend>표시 기준</legend>
+        <div className="segmented">
+          <label className={payBasis === "gross" ? "selected" : ""}>
+            <input
+              type="radio"
+              name="payBasis"
+              checked={payBasis === "gross"}
+              onChange={() => update("payBasis", "gross")}
+            />
+            <strong>세전</strong>
+            <span>입력한 월급 그대로</span>
+          </label>
+          <label
+            className={`${payBasis === "net" ? "selected" : ""}${netAvailable ? "" : " disabled"}`}
+            title={netAvailable ? undefined : "공제액을 입력하면 고를 수 있어요"}
+          >
+            <input
+              type="radio"
+              name="payBasis"
+              checked={payBasis === "net"}
+              disabled={!netAvailable}
+              onChange={() => update("payBasis", "net")}
+            />
+            <strong>세후</strong>
+            <span>{netAvailable ? "월급에서 공제액을 빼고" : "공제액을 입력하면 선택 가능"}</span>
+          </label>
+        </div>
+      </fieldset>
 
       <fieldset className="field">
         <legend>계산 방식</legend>

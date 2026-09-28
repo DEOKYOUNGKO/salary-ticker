@@ -9,6 +9,7 @@ import {
   nextStatusLabel,
   STATUS_LABEL,
 } from "../format";
+import { effectivePayBasis, PAY_BASIS_LABEL, toEngineSettings } from "../settings/pay";
 import type { Settings } from "../settings/schema";
 import { useTheme } from "../settings/useTheme";
 import { useNow } from "./useNow";
@@ -47,9 +48,12 @@ function WidgetCard({ settings }: { settings: Settings }) {
   const visible = useWidgetVisible();
   // 창이 숨겨져 있으면 화면 갱신 중지 (트레이 툴팁은 1초마다 따로 갱신)
   const now = useNow(TICK_MS, getNow, !visible);
-  useTrayTooltip(settings, getNow);
-  useWorkEndNotification(settings, getNow);
-  const e = useMemo(() => calculate(now, settings), [now, settings]);
+  // 세후 기준이면 월급만 (월급 - 공제 합계)로 바꿔서 엔진에 넘긴다
+  const engineSettings = useMemo(() => toEngineSettings(settings), [settings]);
+  const payLabel = PAY_BASIS_LABEL[effectivePayBasis(settings)];
+  useTrayTooltip(engineSettings, getNow, payLabel);
+  useWorkEndNotification(engineSettings, settings.notifyWorkEnd, getNow);
+  const e = useMemo(() => calculate(now, engineSettings), [now, engineSettings]);
 
   const progress = Math.round(e.todayProgress * 1000) / 10;
   const statusLabel =
@@ -72,7 +76,7 @@ function WidgetCard({ settings }: { settings: Settings }) {
         className={`card small status-${e.status}`}
         style={{ opacity: settings.widget.opacity }}
         data-tauri-drag-region="deep"
-        title={`오늘 번 돈 · ${statusLabel} · ${nextText}`}
+        title={`오늘 번 돈(${payLabel}) · ${statusLabel} · ${nextText}`}
       >
         <div className="amount" style={amountStyle}>
           {amountText}
@@ -93,6 +97,9 @@ function WidgetCard({ settings }: { settings: Settings }) {
         <span className="status-pill" data-tauri-drag-region>
           <span className="status-dot" aria-hidden data-tauri-drag-region />
           {statusLabel}
+          <span className="pay-basis" title={`${payLabel} 기준`} data-tauri-drag-region>
+            {payLabel}
+          </span>
         </span>
         <span className="header-right" data-tauri-drag-region>
           <span className="clock" data-tauri-drag-region>{clockFormat.format(now)}</span>
