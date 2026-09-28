@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Claude Code 작업 트리
+.claude/worktrees/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
