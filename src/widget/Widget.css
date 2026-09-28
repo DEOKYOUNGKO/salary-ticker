@@ -233,44 +233,43 @@
   color: var(--text);
 }
 
-/* ---- 미니 모드 ---- */
+/* ---- 크기 조절 ---- */
 
-.card.compact {
+/* 가장 작은 크기: 금액만, 카드 전체가 드래그 영역 */
+.card.small {
   justify-content: center;
-  gap: 7px;
-  padding: 8px 14px;
+  padding: 4px 12px;
   border-radius: 12px;
   cursor: default;
 }
 
-.compact-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.card.small .amount {
   pointer-events: none; /* 드래그는 카드(deep)가 받음 */
+  overflow: hidden;
+  text-overflow: clip;
 }
 
-.compact-amount {
-  flex: 1;
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: -0.3px;
-  white-space: nowrap;
+.amount .unit {
+  font-size: 0.55em;
 }
 
-.compact-amount .unit {
-  font-size: 13px;
+/* 오른쪽 아래 모서리 크기 조절 손잡이 */
+.resize-grip {
+  position: absolute;
+  right: 1px;
+  bottom: 1px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  width: 14px;
+  height: 14px;
+  padding: 2px;
+  border-bottom-right-radius: 12px;
+  color: var(--muted);
+  opacity: 0.45;
+  cursor: nwse-resize;
 }
 
-.compact-status {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--accent);
-  white-space: nowrap;
-}
-
-.progress.thin {
-  margin-top: 0;
-  height: 4px;
-  pointer-events: none;
+.resize-grip:hover {
+  opacity: 1;
 }

@@ -14,11 +14,10 @@ use tauri_plugin_window_state::{AppHandleExt, StateFlags};
 const WIDGET: &str = "widget";
 const SETTINGS: &str = "settings";
 
-/// 위젯은 크기가 고정이라 사실상 위치만 기억한다.
-/// (SIZE도 저장해야 "저장된 적 있음"을 width > 0으로 구분할 수 있음)
+/// 위젯 위치와 (사용자가 조절한) 크기를 기억한다.
 const WINDOW_STATE_FLAGS: StateFlags = StateFlags::POSITION.union(StateFlags::SIZE);
-/// 드래그가 끝나고 이 시간 동안 움직임이 없으면 위치를 파일에 저장
-const SAVE_POSITION_DELAY: Duration = Duration::from_millis(500);
+/// 이동·크기 조절이 끝나고 이 시간 동안 변화가 없으면 파일에 저장
+const SAVE_STATE_DELAY: Duration = Duration::from_millis(500);
 
 /// 위젯 보이기/숨기기. 트레이 메뉴 글자와 위젯의 갱신 on/off도 함께 맞춘다.
 pub fn set_widget_visible(app: &AppHandle, visible: bool) {
@@ -48,9 +47,9 @@ pub fn toggle_widget(app: &AppHandle) {
 }
 
 /// 저장된 위젯 옵션을 창과 트레이 메뉴(클릭 통과 체크)에 반영
-fn apply_widget_options(app: &AppHandle, anchor: bool) -> tauri::Result<()> {
+fn apply_widget_options(app: &AppHandle) -> tauri::Result<()> {
     if let Some(widget) = app.get_webview_window(WIDGET) {
-        let options = widget_options::apply(&widget, anchor)?;
+        let options = widget_options::apply(&widget)?;
         tray::set_click_through_checked(app, options.click_through);
     }
     Ok(())
@@ -66,7 +65,7 @@ pub fn toggle_click_through(app: &AppHandle) {
     if let Some(saved) = settings::set_widget_option(app, "clickThrough", enabled.into()) {
         let _ = app.emit("settings-changed", saved);
     }
-    if let Err(e) = apply_widget_options(app, true) {
+    if let Err(e) = apply_widget_options(app) {
         eprintln!("[widget] 클릭 통과 반영 실패: {e}");
     }
 }
@@ -99,12 +98,26 @@ fn hide_settings(app: AppHandle) -> Result<(), String> {
 #[tauri::command]
 fn finish_settings(app: AppHandle) -> Result<(), String> {
     autostart::sync(&app);
-    apply_widget_options(&app, true).map_err(|e| e.to_string())?;
+    apply_widget_options(&app).map_err(|e| e.to_string())?;
     if let Some(settings) = app.get_webview_window(SETTINGS) {
         settings.hide().map_err(|e| e.to_string())?;
     }
     set_widget_visible(&app, true);
     notify::tray_hint_once(&app);
+    Ok(())
+}
+
+/// 설정 창 "가장 작게/가장 크게": 가까운 화면 모서리를 기준으로 크기를 바꾼다
+#[tauri::command]
+fn set_widget_size(app: AppHandle, preset: String) -> Result<(), String> {
+    let size = match preset.as_str() {
+        "min" => widget_options::MIN_SIZE,
+        "max" => widget_options::MAX_SIZE,
+        other => return Err(format!("unknown preset: {other}")),
+    };
+    if let Some(widget) = app.get_webview_window(WIDGET) {
+        widget_options::resize_logical(&widget, size, true).map_err(|e| e.to_string())?;
+    }
     Ok(())
 }
 
@@ -126,13 +139,13 @@ fn set_tray_tooltip(app: AppHandle, text: String) {
     tray::set_tooltip(&app, &text);
 }
 
-/// 위젯이 움직일 때마다 저장하지 않고, 멈춘 뒤 한 번만 저장
-fn schedule_position_save(app: &AppHandle) {
+/// 위젯이 움직이거나 크기가 바뀔 때마다 저장하지 않고, 멈춘 뒤 한 번만 저장
+fn schedule_state_save(app: &AppHandle) {
     static GENERATION: AtomicU64 = AtomicU64::new(0);
     let generation = GENERATION.fetch_add(1, Ordering::SeqCst) + 1;
     let app = app.clone();
     std::thread::spawn(move || {
-        std::thread::sleep(SAVE_POSITION_DELAY);
+        std::thread::sleep(SAVE_STATE_DELAY);
         if GENERATION.load(Ordering::SeqCst) == generation {
             let _ = app.save_window_state(WINDOW_STATE_FLAGS);
         }
@@ -163,6 +176,7 @@ pub fn run() {
             hide_settings,
             finish_settings,
             hide_widget,
+            set_widget_size,
             set_tray_tooltip,
             show_notification
         ])
@@ -170,9 +184,11 @@ pub fn run() {
             let handle = app.handle();
             tray::build(handle)?;
             if let Some(widget) = app.get_webview_window(WIDGET) {
-                // 미니 모드 크기를 먼저 맞춰야 저장 위치·기본 위치 계산이 맞다
-                apply_widget_options(handle, false)?;
-                position::place_widget(&widget)?;
+                apply_widget_options(handle)?;
+                // 예전 미니 모드가 켜져 있었으면 가장 작은 크기로 옮겨 온다
+                let legacy_compact = widget_options::take_legacy_compact(handle);
+                // 크기를 먼저 복원해야 화면 밖 검사·기본 위치가 새 크기 기준으로 계산된다
+                position::place_widget(&widget, legacy_compact)?;
             }
             if settings::is_configured(handle) {
                 autostart::sync(handle);
@@ -202,7 +218,9 @@ pub fn run() {
                     api.prevent_close();
                     set_widget_visible(app, false);
                 }
-                (WIDGET, WindowEvent::Moved(_)) => schedule_position_save(app),
+                (WIDGET, WindowEvent::Moved(_) | WindowEvent::Resized(_)) => {
+                    schedule_state_save(app)
+                }
                 _ => {}
             }
         })

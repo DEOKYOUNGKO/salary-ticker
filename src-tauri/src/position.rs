@@ -1,7 +1,9 @@
-//! 위젯 첫 위치(주 모니터 오른쪽 아래)와 저장 위치 복원.
+//! 위젯 첫 위치(주 모니터 오른쪽 아래)와 저장된 크기·위치 복원.
 //! 저장은 tauri-plugin-window-state가 하고, 복원은 화면 밖 검사를 위해 여기서 직접 한다.
 
-use tauri::{AppHandle, Manager, PhysicalPosition, PhysicalRect, Runtime, WebviewWindow};
+use tauri::{
+    AppHandle, Manager, PhysicalPosition, PhysicalRect, PhysicalSize, Runtime, WebviewWindow,
+};
 use tauri_plugin_window_state::DEFAULT_FILENAME;
 
 /// 작업 영역 가장자리와의 간격 (논리 px)
@@ -9,19 +11,27 @@ const MARGIN: f64 = 16.0;
 /// 창 면적의 이 비율 이상이 어떤 모니터 작업 영역 안에 있어야 "화면 안"으로 본다.
 const MIN_VISIBLE_RATIO: f64 = 0.5;
 
-/// window-state 파일에 저장된 위젯 위치
-fn saved_position<R: Runtime>(app: &AppHandle<R>, label: &str) -> Option<PhysicalPosition<i32>> {
+/// window-state 파일에 저장된 위젯 위치와 크기
+fn saved_state<R: Runtime>(
+    app: &AppHandle<R>,
+    label: &str,
+) -> Option<(PhysicalPosition<i32>, PhysicalSize<u32>)> {
     let path = app.path().app_config_dir().ok()?.join(DEFAULT_FILENAME);
     let json: serde_json::Value =
         serde_json::from_str(&std::fs::read_to_string(path).ok()?).ok()?;
     let state = json.get(label)?;
     let x = state.get("x")?.as_i64()? as i32;
     let y = state.get("y")?.as_i64()? as i32;
-    // 한 번도 위치가 기록되지 않은 기본값 (플러그인이 0,0,0x0으로 넣어 둠)
-    if state.get("width")?.as_u64()? == 0 {
+    let width = state.get("width")?.as_u64()? as u32;
+    let height = state.get("height")?.as_u64()? as u32;
+    // 한 번도 기록되지 않은 기본값 (플러그인이 0,0,0x0으로 넣어 둠)
+    if width == 0 || height == 0 {
         return None;
     }
-    Some(PhysicalPosition::new(x, y))
+    Some((
+        PhysicalPosition::new(x, y),
+        PhysicalSize::new(width, height),
+    ))
 }
 
 fn overlap(a: (i64, i64), b: (i64, i64)) -> i64 {
@@ -64,9 +74,18 @@ fn default_position<R: Runtime>(window: &WebviewWindow<R>) -> Option<PhysicalPos
     ))
 }
 
+/// 저장된 크기를 먼저 복원(force_min이면 가장 작은 크기)하고, 그 크기 기준으로
 /// 저장 위치가 화면 안이면 그 위치, 아니면(또는 처음이면) 기본 위치로 옮긴다.
-pub fn place_widget<R: Runtime>(window: &WebviewWindow<R>) -> tauri::Result<()> {
-    let position = saved_position(window.app_handle(), window.label())
+pub fn place_widget<R: Runtime>(window: &WebviewWindow<R>, force_min: bool) -> tauri::Result<()> {
+    let saved = saved_state(window.app_handle(), window.label());
+    if force_min {
+        crate::widget_options::resize_logical(window, crate::widget_options::MIN_SIZE, false)?;
+    } else if let Some((_, size)) = saved {
+        crate::widget_options::resize(window, size, false)?;
+    }
+
+    let position = saved
+        .map(|(pos, _)| pos)
         .filter(|&pos| is_on_screen(window, pos))
         .or_else(|| default_position(window));
     if let Some(position) = position {

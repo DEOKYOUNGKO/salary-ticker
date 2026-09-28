@@ -20,10 +20,11 @@ Tauri 플러그인: store, autostart, notification, window-state.
 # 설정 스키마
 monthlySalary, mode('work'|'24h'), workStart, workEnd, lunch({start,end}|null),
 workDays(number[], 기본 월~금), periodStartDay(기본 1), excludeHolidays, autoStart, notifyWorkEnd(퇴근 알림, 기본 켬), theme,
-widget{opacity, compact, placement('top'|'bottom'), clickThrough}
+widget{opacity, placement('top'|'bottom'), clickThrough}. 위젯 크기·위치는 window-state 파일에 저장.
 
 # 창
-widget: 340x230, decorations false, transparent true, shadow false, alwaysOnTop true, skipTaskbar true, resizable false.
+widget: 최대 340x230, 최소 180x44(금액 한 줄), decorations false, transparent true, shadow false, alwaysOnTop true, skipTaskbar true, resizable true, maximizable false.
+- 오른쪽 아래 모서리 손잡이로 크기 조절(startResizeDragging). 크기에 따라 전체 → 하단 통계 숨김 → 금액만(버튼 숨김, 카드 전체 드래그, 설정은 트레이). 금액 글자 크기도 창에 맞춤.
 - html/body 배경 투명, 내용은 둥근 카드 하나.
 - 카드 상단에 data-tauri-drag-region. capabilities에 core:window:allow-start-dragging 추가.
 - 첫 위치는 주 모니터 오른쪽 아래(작업표시줄 위). 이후 위치 기억. 저장 위치가 화면 밖이면 기본 위치로 복귀.

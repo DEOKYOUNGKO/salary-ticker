@@ -16,7 +16,7 @@
         "title": "월급 티커",
         "width": 340,
         "height": 230,
-        "resizable": false,
+        "resizable": true,
         "maximizable": false,
         "visible": false,
         "decorations": false,
@@ -25,7 +25,11 @@
         "alwaysOnTop": true,
         "skipTaskbar": true,
         "minimizable": false,
-        "focus": false
+        "focus": false,
+        "minWidth": 180,
+        "minHeight": 44,
+        "maxWidth": 340,
+        "maxHeight": 230
       },
       {
         "label": "settings",

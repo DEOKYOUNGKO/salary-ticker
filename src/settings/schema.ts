@@ -5,7 +5,6 @@ export type Theme = "system" | "light" | "dark";
 export interface WidgetOptions {
   /** 0~1 */
   opacity: number;
-  compact: boolean;
   /** 항상 위 / 바탕화면 고정 */
   placement: "top" | "bottom";
   clickThrough: boolean;
@@ -32,7 +31,6 @@ export const DEFAULT_SETTINGS: Settings = {
   theme: "system",
   widget: {
     opacity: 1,
-    compact: false,
     placement: "top",
     clickThrough: false,
   },

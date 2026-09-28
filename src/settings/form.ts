@@ -15,7 +15,6 @@ export interface SettingsForm {
   periodStartDay: number;
   /** 위젯 불투명도 0.2~1 */
   opacity: number;
-  compact: boolean;
   placement: "top" | "bottom";
   clickThrough: boolean;
   notifyWorkEnd: boolean;
@@ -39,7 +38,6 @@ export function settingsToForm(s: Settings): SettingsForm {
     excludeHolidays: s.excludeHolidays,
     periodStartDay: s.periodStartDay,
     opacity: s.widget.opacity,
-    compact: s.widget.compact,
     placement: s.widget.placement,
     clickThrough: s.widget.clickThrough,
     notifyWorkEnd: s.notifyWorkEnd,
@@ -63,7 +61,6 @@ export function formToSettings(form: SettingsForm, base: Settings): Settings {
     widget: {
       ...base.widget,
       opacity: form.opacity,
-      compact: form.compact,
       placement: form.placement,
       clickThrough: form.clickThrough,
     },

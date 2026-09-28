@@ -275,3 +275,22 @@
   width: 100%;
   accent-color: var(--c-primary);
 }
+
+.size-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.size-buttons button {
+  flex: 1;
+  height: 34px;
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  background: var(--button-bg);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.size-buttons button:hover {
+  background: var(--button-hover);
+}

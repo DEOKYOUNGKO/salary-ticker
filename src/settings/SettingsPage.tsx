@@ -290,15 +290,19 @@ export default function SettingsPage() {
       </div>
 
       <div className="field">
-        <label className="check">
-          <input
-            type="checkbox"
-            checked={form.compact}
-            onChange={(e) => update("compact", e.target.checked)}
-          />
-          미니 모드
-        </label>
-        <p className="hint">오늘 번 돈과 진행 바만 작게 보여 줘요. 설정은 트레이 메뉴에서 열어요.</p>
+        <label>크기</label>
+        <div className="size-buttons">
+          <button type="button" onClick={() => invoke("set_widget_size", { preset: "min" })}>
+            가장 작게 (금액만)
+          </button>
+          <button type="button" onClick={() => invoke("set_widget_size", { preset: "max" })}>
+            가장 크게
+          </button>
+        </div>
+        <p className="hint flush">
+          위젯 오른쪽 아래 모서리를 끌어서 직접 조절할 수도 있어요. 작게 하면 하단 통계, 버튼 순으로
+          숨겨지고, 가장 작을 때는 트레이 메뉴에서 설정을 열어요.
+        </p>
       </div>
 
       <fieldset className="field">

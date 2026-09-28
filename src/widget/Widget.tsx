@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { calculate, holidayName } from "../engine";
 import {
   formatDuration,
@@ -15,6 +16,8 @@ import { useSettings } from "./useSettings";
 import { useTrayTooltip } from "./useTrayTooltip";
 import { useWorkEndNotification } from "./useWorkEndNotification";
 import { useWidgetVisible } from "./useWidgetVisible";
+import { amountFontSize, layoutTier, showTodayLabel } from "./layout";
+import { useWindowSize } from "./useWindowSize";
 import DevClock from "./DevClock";
 import "./Widget.css";
 
@@ -53,34 +56,38 @@ function WidgetCard({ settings }: { settings: Settings }) {
     (e.status === "holiday" && settings.excludeHolidays && holidayName(now)) ||
     STATUS_LABEL[e.status];
 
-  if (settings.widget.compact) {
-    // 미니 모드: 버튼 없이 카드 전체가 드래그 영역
+  const { width, height } = useWindowSize();
+  const tier = layoutTier(width, height);
+  const amountText = formatWon2(e.todayEarned);
+  const amountStyle = { fontSize: amountFontSize(amountText, width, height) };
+  const nextText =
+    e.secondsToNextStatus === null
+      ? "근무일 없음"
+      : `${nextStatusLabel(e)} ${formatDuration(e.secondsToNextStatus)}`;
+
+  if (tier === "small") {
+    // 가장 작은 크기: 금액만. 버튼 없이 카드 전체가 드래그 영역, 설정은 트레이 메뉴로
     return (
       <main
-        className={`card compact status-${e.status}`}
+        className={`card small status-${e.status}`}
         style={{ opacity: settings.widget.opacity }}
         data-tauri-drag-region="deep"
-        title={`${statusLabel} · ${nextStatusLabel(e)} ${
-          e.secondsToNextStatus === null ? "-" : formatDuration(e.secondsToNextStatus)
-        }`}
+        title={`오늘 번 돈 · ${statusLabel} · ${nextText}`}
       >
-        <div className="compact-row">
-          <span className="status-dot" aria-label={statusLabel} />
-          <span className="compact-amount">
-            {formatWon2(e.todayEarned)}
-            <span className="unit">원</span>
-          </span>
-          <span className="compact-status">{statusLabel}</span>
+        <div className="amount" style={amountStyle}>
+          {amountText}
+          <span className="unit">원</span>
         </div>
-        <div className="progress thin" aria-label="오늘 진행률">
-          <div className="progress-fill" style={{ width: `${progress}%` }} />
-        </div>
+        <ResizeGrip />
       </main>
     );
   }
 
   return (
-    <main className={`card status-${e.status}`} style={{ opacity: settings.widget.opacity }}>
+    <main
+      className={`card ${tier} status-${e.status}`}
+      style={{ opacity: settings.widget.opacity }}
+    >
       {/* 상단 줄을 잡고 끌어서 이동. 드래그 속성은 클릭된 요소 자신에 있어야 해서 글자에도 붙임 */}
       <header className="card-header" data-tauri-drag-region>
         <span className="status-pill" data-tauri-drag-region>
@@ -121,9 +128,9 @@ function WidgetCard({ settings }: { settings: Settings }) {
       </header>
 
       <section className="today">
-        <div className="label">오늘 번 돈</div>
-        <div className="amount">
-          {formatWon2(e.todayEarned)}
+        {showTodayLabel(tier, height) && <div className="label">오늘 번 돈</div>}
+        <div className="amount" style={amountStyle}>
+          {amountText}
           <span className="unit">원</span>
         </div>
       </section>
@@ -139,28 +146,28 @@ function WidgetCard({ settings }: { settings: Settings }) {
         <div className="progress-fill" style={{ width: `${progress}%` }} />
       </div>
       <div className="progress-meta">
-        <span>
-          {e.secondsToNextStatus === null
-            ? "근무일 없음"
-            : `${nextStatusLabel(e)} ${formatDuration(e.secondsToNextStatus)}`}
-        </span>
+        <span>{nextText}</span>
         <span>{progress.toFixed(1)}%</span>
       </div>
 
-      <dl className="stats">
-        <div>
-          <dt>{settings.periodStartDay === 1 ? "이번 달 누적" : "이번 기간 누적"}</dt>
-          <dd>{formatWon0(e.periodEarned)}원</dd>
-        </div>
-        <div>
-          <dt>초당</dt>
-          <dd>{formatWon2(e.perSecond)}원</dd>
-        </div>
-        <div>
-          <dt>시급 환산</dt>
-          <dd>{formatWon0(e.hourly)}원</dd>
-        </div>
-      </dl>
+      {tier === "full" && (
+        <dl className="stats">
+          <div>
+            <dt>{settings.periodStartDay === 1 ? "이번 달 누적" : "이번 기간 누적"}</dt>
+            <dd>{formatWon0(e.periodEarned)}원</dd>
+          </div>
+          <div>
+            <dt>초당</dt>
+            <dd>{formatWon2(e.perSecond)}원</dd>
+          </div>
+          <div>
+            <dt>시급 환산</dt>
+            <dd>{formatWon0(e.hourly)}원</dd>
+          </div>
+        </dl>
+      )}
+
+      <ResizeGrip />
 
       {import.meta.env.DEV && devOpen && (
         <DevClock
@@ -172,6 +179,27 @@ function WidgetCard({ settings }: { settings: Settings }) {
         />
       )}
     </main>
+  );
+}
+
+/** 오른쪽 아래 모서리: 끌어서 위젯 크기 조절 (창 테두리가 없어서 직접 시작) */
+function ResizeGrip() {
+  return (
+    <div
+      className="resize-grip"
+      data-tauri-drag-region="false"
+      title="끌어서 크기 조절"
+      aria-hidden
+      onMouseDown={(ev) => {
+        if (ev.button !== 0) return;
+        ev.preventDefault();
+        getCurrentWindow().startResizeDragging("SouthEast");
+      }}
+    >
+      <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden>
+        <path d="M9 1 1 9M9 5 5 9" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+      </svg>
+    </div>
   );
 }
 

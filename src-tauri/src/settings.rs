@@ -41,3 +41,21 @@ pub fn set_widget_option<R: Runtime>(app: &AppHandle<R>, key: &str, value: Value
     }
     Some(settings)
 }
+
+/// settings.widget[key] 값을 지운다 (없어진 옵션 정리용).
+pub fn remove_widget_option<R: Runtime>(app: &AppHandle<R>, key: &str) {
+    let Ok(store) = app.store(STORE_PATH) else {
+        return;
+    };
+    let Some(mut settings) = store.get(SETTINGS_KEY) else {
+        return;
+    };
+    let removed = settings
+        .get_mut("widget")
+        .and_then(Value::as_object_mut)
+        .and_then(|w| w.remove(key));
+    if removed.is_some() {
+        store.set(SETTINGS_KEY, settings);
+        let _ = store.save();
+    }
+}

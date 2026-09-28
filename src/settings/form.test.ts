@@ -21,7 +21,6 @@ const valid: SettingsForm = {
   excludeHolidays: true,
   periodStartDay: 1,
   opacity: 1,
-  compact: false,
   placement: "top",
   clickThrough: false,
   notifyWorkEnd: true,
